@@ -1,23 +1,23 @@
-# AI SOC Assistant — Documentation
+# AI SOC Assistant - Documentation
 
 ## API Endpoints
 
 ### Auth
-- `POST /auth/register` — create new user account
-- `POST /auth/login` — get JWT access token
-- `GET /auth/me` — get current user info
+- `POST /auth/register` - create new user account
+- `POST /auth/login` - get JWT access token
+- `GET /auth/me` - get current user info
 
 ### Chat
-- `POST /api/chat/` — send a message and get AI response
+- `POST /api/chat/` - send a message and get AI response
 
 ### Conversations
-- `GET /api/conversations/` — list user's conversations
-- `GET /api/conversations/{id}/messages` — get messages for a conversation
-- `DELETE /api/conversations/{id}` — delete a conversation
+- `GET /api/conversations/` - list user's conversations
+- `GET /api/conversations/{id}/messages` - get messages for a conversation
+- `DELETE /api/conversations/{id}` - delete a conversation
 
 ### Admin
-- `GET /api/admin/stats` — system statistics (admin only)
-- `GET /api/admin/users` — list all users (admin only)
+- `GET /api/admin/stats` - system statistics (admin only)
+- `GET /api/admin/users` - list all users (admin only)
 
 ## Agent Routing
 

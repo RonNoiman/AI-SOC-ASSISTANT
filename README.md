@@ -4,18 +4,18 @@ An AI-powered Security Operations Center assistant that uses specialized agents 
 
 ## Architecture
 
-- **Orchestrator** — classifies incoming queries and routes them to the appropriate specialist agent
-- **Network Agent** — firewall rules, traffic analysis, IP investigations
-- **Identity Agent** — authentication, access reviews, AD/LDAP, MFA
-- **Policy Agent** — compliance frameworks, security policies, audits
-- **Guardrails** — input/output validation to prevent prompt injection and data leakage
+- **Orchestrator** - classifies incoming queries and routes them to the appropriate specialist agent
+- **Network Agent** - firewall rules, traffic analysis, IP investigations
+- **Identity Agent** - authentication, access reviews, AD/LDAP, MFA
+- **Policy Agent** - compliance frameworks, security policies, audits
+- **Guardrails** - input/output validation to prevent prompt injection and data leakage
 
 ## Tech Stack
 
 - **Backend:** FastAPI + SQLAlchemy + PostgreSQL
 - **LLM:** Groq (Llama 3.3 70B)
 - **Auth:** JWT with bcrypt password hashing
-- **Frontend:** React (coming soon)
+- **Frontend:** React + TypeScript + Vite
 
 ## Getting Started
 

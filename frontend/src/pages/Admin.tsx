@@ -63,7 +63,7 @@ export default function Admin() {
               <tr key={u.id}>
                 <td>{u.id}</td>
                 <td>{u.email}</td>
-                <td>{u.full_name || "—"}</td>
+                <td>{u.full_name || "-"}</td>
                 <td>
                   <span className={`role-badge ${u.role}`}>{u.role}</span>
                 </td>
