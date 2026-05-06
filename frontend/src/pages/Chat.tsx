@@ -77,9 +77,9 @@ export default function Chat() {
             <p>Ask about network threats, identity issues, or security policies.</p>
             <div className="chat-suggestions">
               {[
-                "Analyze recent failed login attempts",
-                "Check for suspicious outbound traffic",
-                "Review firewall policy for port 443",
+                "How should I investigate repeated failed login attempts?",
+                "What signs indicate suspicious outbound traffic?",
+                "What is a secure firewall policy for port 443?",
               ].map((s) => (
                 <button
                   key={s}
