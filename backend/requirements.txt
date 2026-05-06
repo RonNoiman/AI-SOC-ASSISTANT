@@ -8,4 +8,5 @@ python-dotenv
 email-validator
 groq
 pytest
+pytest-asyncio
 httpx
