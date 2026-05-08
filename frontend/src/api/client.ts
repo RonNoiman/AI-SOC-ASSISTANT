@@ -41,6 +41,16 @@ export const auth = {
       method: "POST",
       body: JSON.stringify({ email, password, full_name }),
     }),
+  requestPasswordReset: (email: string) =>
+    request<{ detail: string }>("/auth/forgot-password/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  confirmPasswordReset: (token: string, new_password: string) =>
+    request<{ detail: string }>("/auth/forgot-password/confirm", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    }),
   me: () =>
     request<{ id: number; email: string; full_name: string | null; role: string }>("/auth/me"),
 };

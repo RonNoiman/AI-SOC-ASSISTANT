@@ -1,4 +1,5 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -56,6 +57,10 @@ export default function Login() {
               placeholder="Enter password"
               required
             />
+          </div>
+
+          <div className="auth-link-row">
+            <Link to="/forgot-password">Forgot password?</Link>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>

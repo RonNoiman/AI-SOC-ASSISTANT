@@ -58,6 +58,10 @@ a:hover { text-decoration: underline; }
   padding: 2.5rem;
 }
 
+.auth-card-wide {
+  max-width: 460px;
+}
+
 .auth-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -144,11 +148,39 @@ a:hover { text-decoration: underline; }
   margin-bottom: 1rem;
 }
 
+.success-msg {
+  background: var(--green-dim);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #86efac;
+  padding: 0.625rem 0.875rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.auth-link-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
 .auth-footer {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+.auth-divider {
+  margin: 1.5rem 0 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* ── App Layout ── */
