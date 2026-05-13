@@ -8,15 +8,27 @@ interface ChatMessage {
 }
 
 const AGENT_COLORS: Record<string, string> = {
-  network_agent: "#00d4ff",
-  identity_agent: "#a78bfa",
-  policy_agent: "#f59e0b",
-  general: "#10b981",
+  network: "#00d4ff",
+  identity: "#a78bfa",
+  policy: "#f59e0b",
+  guardrail: "#ef4444",
+};
+
+const AGENT_LABELS: Record<string, string> = {
+  network: "Network Security",
+  identity: "Identity & Authentication",
+  policy: "Policy & Compliance",
+  guardrail: "Guardrail (blocked)",
 };
 
 function agentColor(agent?: string) {
   if (!agent) return "#64748b";
   return AGENT_COLORS[agent] || "#64748b";
+}
+
+function agentLabel(agent?: string) {
+  if (!agent) return "";
+  return AGENT_LABELS[agent] || agent;
 }
 
 export default function Chat() {
@@ -77,9 +89,9 @@ export default function Chat() {
             <p>Ask about network threats, identity issues, or security policies.</p>
             <div className="chat-suggestions">
               {[
-                "How should I investigate repeated failed login attempts?",
-                "What signs indicate suspicious outbound traffic?",
-                "What is a secure firewall policy for port 443?",
+                "Multiple failed RDP connections to port 3389 from unknown IPs",
+                "50 failed login attempts for user admin from different countries",
+                "Are we allowed to disable a user account during an active incident?",
               ].map((s) => (
                 <button
                   key={s}
@@ -104,7 +116,7 @@ export default function Chat() {
                   className="agent-dot"
                   style={{ background: agentColor(msg.agent) }}
                 />
-                {msg.agent.replace("_", " ")}
+                {agentLabel(msg.agent)}
               </div>
             )}
             <div className="bubble-content">{msg.content}</div>

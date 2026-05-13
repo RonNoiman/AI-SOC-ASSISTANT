@@ -1,3 +1,4 @@
+import logging
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -8,6 +9,8 @@ from database.connection import get_db
 from auth.service import AuthService
 from auth.middleware import get_current_user
 from database.models import User
+
+logger = logging.getLogger("soc.auth")
 
 router = APIRouter()
 
@@ -50,9 +53,11 @@ class UserResponse(BaseModel):
 @router.post("/register", response_model=TokenResponse)
 async def register(body: RegisterRequest, db: Session = Depends(get_db)):
     if AuthService.get_user_by_email(db, body.email):
+        logger.info("REGISTER_REJECTED email=%s reason=duplicate", body.email)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     user = AuthService.create_user(db, body.email, body.password, body.full_name)
+    logger.info("REGISTER_OK user_id=%s email=%s", user.id, user.email)
     token = AuthService.create_access_token({"sub": user.id})
     return TokenResponse(access_token=token)
 
@@ -61,8 +66,10 @@ async def register(body: RegisterRequest, db: Session = Depends(get_db)):
 async def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = AuthService.get_user_by_email(db, body.email)
     if not user or not AuthService.verify_password(body.password, user.hashed_password):
+        logger.warning("LOGIN_FAILED email=%s", body.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    logger.info("LOGIN_OK user_id=%s email=%s", user.id, user.email)
     token = AuthService.create_access_token({"sub": user.id})
     return TokenResponse(access_token=token)
 

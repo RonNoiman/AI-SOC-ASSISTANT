@@ -1,7 +1,6 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
-psycopg2-binary
 python-jose[cryptography]
 passlib[bcrypt]
 python-dotenv
@@ -10,3 +9,7 @@ groq
 pytest
 pytest-asyncio
 httpx
+
+# Optional: only needed if DATABASE_URL points to a PostgreSQL instance.
+# Uncomment to enable. Default DB is SQLite (no extra driver required).
+# psycopg2-binary

@@ -31,7 +31,12 @@ class Conversation(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation", order_by="Message.created_at")
+    messages = relationship(
+        "Message",
+        back_populates="conversation",
+        order_by="Message.created_at",
+        cascade="all, delete-orphan",
+    )
 
 
 class Message(Base):

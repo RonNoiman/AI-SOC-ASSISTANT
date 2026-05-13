@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -8,8 +10,16 @@ from auth.middleware import get_current_user
 from agents.orchestrator import Orchestrator
 from guardrails.checker import GuardrailChecker
 
+logger = logging.getLogger("soc.chat")
+
 router = APIRouter()
 orchestrator = Orchestrator()
+
+GUARDRAIL_REFUSAL = (
+    "I can't help with that request. This assistant only handles defensive "
+    "security operations (network, identity, and policy). If you have a legitimate "
+    "SOC question, please rephrase it without instructions to override safety rules."
+)
 
 
 class ChatRequest(BaseModel):
@@ -21,6 +31,7 @@ class ChatResponse(BaseModel):
     response: str
     agent: str
     conversation_id: int
+    blocked: bool = False
 
 
 @router.post("/", response_model=ChatResponse)
@@ -29,12 +40,7 @@ async def chat(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # Guardrail check on input
-    input_check = GuardrailChecker.check_input(body.message)
-    if not input_check["safe"]:
-        raise HTTPException(status_code=400, detail=input_check["reason"])
-
-    # Get or create conversation
+    # Get or create conversation up front so blocked attempts still get logged.
     if body.conversation_id:
         conversation = db.query(Conversation).filter(
             Conversation.id == body.conversation_id,
@@ -48,10 +54,33 @@ async def chat(
         db.commit()
         db.refresh(conversation)
 
+    # Guardrail check on input -> return safe refusal as a normal assistant message.
+    input_check = GuardrailChecker.check_input(body.message)
+    if not input_check["safe"]:
+        logger.warning(
+            "GUARDRAIL_BLOCK user_id=%s reason=%r message_preview=%r",
+            user.id, input_check["reason"], body.message[:120],
+        )
+        db.add(Message(conversation_id=conversation.id, role="user", content=body.message))
+        db.add(Message(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=GUARDRAIL_REFUSAL,
+            agent_used="guardrail",
+        ))
+        db.commit()
+        return ChatResponse(
+            response=GUARDRAIL_REFUSAL,
+            agent="guardrail",
+            conversation_id=conversation.id,
+            blocked=True,
+        )
+
     # Build conversation history
     history = [
         {"role": msg.role, "content": msg.content}
         for msg in conversation.messages
+        if msg.role in ("user", "assistant")
     ]
 
     # Route to agent
@@ -60,7 +89,13 @@ async def chat(
     # Guardrail check on output
     output_check = GuardrailChecker.check_output(result["response"])
     if not output_check["safe"]:
-        result["response"] = "I cannot provide that response as it may contain sensitive information."
+        logger.warning(
+            "GUARDRAIL_OUTPUT_BLOCK user_id=%s reason=%r",
+            user.id, output_check["reason"],
+        )
+        result["response"] = (
+            "I cannot share that response as it may contain sensitive information."
+        )
 
     # Save messages
     db.add(Message(conversation_id=conversation.id, role="user", content=body.message))

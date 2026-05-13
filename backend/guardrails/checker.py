@@ -5,11 +5,19 @@ class GuardrailChecker:
     """Validates user queries and agent responses for safety and relevance."""
 
     BLOCKED_PATTERNS = [
-        r"(?i)ignore\s+(previous|all|prior)\s+(instructions|prompts)",
+        # Prompt-injection / override attempts
+        r"(?i)ignore\s+(?:all\s+|the\s+|any\s+)?(?:previous|prior|earlier|above)?\s*(?:instructions|prompts|rules|guidelines)",
+        r"(?i)disregard\s+(?:all\s+|the\s+|previous|prior)?\s*(?:instructions|prompts|rules)",
+        r"(?i)forget\s+(?:everything|all|your|the)\s+(?:above|previous|instructions|prompts|rules)",
         r"(?i)you\s+are\s+now\s+",
         r"(?i)pretend\s+to\s+be",
         r"(?i)act\s+as\s+(?!a\s+soc|an?\s+(network|identity|policy|security))",
         r"(?i)reveal\s+(your|the)\s+(system|initial)\s+prompt",
+        # Requests for offensive tradecraft
+        r"(?i)(give|show|teach|tell)\s+(me\s+)?(the\s+)?(steps|how)\s+to\s+(attack|hack|exploit|breach|bypass)",
+        r"(?i)attack\s+steps",
+        r"(?i)how\s+to\s+(hack|exploit|bypass|crack|brute[-\s]?force)",
+        r"(?i)write\s+(malware|ransomware|a\s+virus|an?\s+exploit)",
     ]
 
     OFF_TOPIC_KEYWORDS = [
