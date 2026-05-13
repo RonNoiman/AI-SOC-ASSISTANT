@@ -5,6 +5,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   agent?: string;
+  createdAt: string;
 }
 
 const AGENT_COLORS: Record<string, string> = {
@@ -46,7 +47,8 @@ export default function Chat() {
     const text = input.trim();
     if (!text || sending) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    const now = new Date().toISOString();
+    setMessages((prev) => [...prev, { role: "user", content: text, createdAt: now }]);
     setInput("");
     setSending(true);
 
@@ -55,12 +57,21 @@ export default function Chat() {
       setConversationId(res.conversation_id);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: res.response, agent: res.agent },
+        {
+          role: "assistant",
+          content: res.response,
+          agent: res.agent,
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Error: ${err.message}` },
+        {
+          role: "assistant",
+          content: `Error: ${err.message}`,
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } finally {
       setSending(false);

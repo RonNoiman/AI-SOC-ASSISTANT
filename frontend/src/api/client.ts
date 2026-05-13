@@ -1,5 +1,35 @@
 const API_BASE = "http://localhost:8000";
 
+function formatApiError(detail: unknown, fallback: string): string {
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        if (item && typeof item === "object" && "msg" in item) {
+          return String(item.msg);
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    if (messages.length > 0) {
+      return messages.join(". ");
+    }
+  }
+
+  if (detail && typeof detail === "object" && "msg" in detail) {
+    return String(detail.msg);
+  }
+
+  return fallback;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -23,7 +53,7 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
+    throw new Error(formatApiError(body.detail, `Request failed: ${res.status}`));
   }
 
   return res.json();
@@ -102,7 +132,19 @@ export interface AdminUser {
   is_active: boolean;
 }
 
+export interface SecurityEvent {
+  id: number;
+  event_type: string;
+  email: string | null;
+  user_id: number | null;
+  status: string;
+  ip_address: string | null;
+  details: string | null;
+  created_at: string;
+}
+
 export const admin = {
   stats: () => request<Stats>("/api/admin/stats"),
   users: () => request<AdminUser[]>("/api/admin/users"),
+  securityEvents: () => request<SecurityEvent[]>("/api/admin/security-events"),
 };

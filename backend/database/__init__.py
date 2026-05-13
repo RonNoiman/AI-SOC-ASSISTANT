@@ -1,2 +1,2 @@
 from .connection import engine, SessionLocal, get_db
-from .models import Base, User, Conversation, Message, PasswordResetToken
+from .models import Base, User, Conversation, Message, PasswordResetToken, SecurityEvent

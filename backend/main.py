@@ -12,7 +12,7 @@ from auth.router import router as auth_router
 from api.chat import router as chat_router
 from api.conversations import router as conversations_router
 from api.admin import router as admin_router
-from database.connection import engine, SessionLocal
+from database.connection import engine, SessionLocal, ensure_runtime_schema
 from database.models import Base, User
 from auth.service import AuthService
 
@@ -52,6 +52,7 @@ def _seed_demo_users() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    ensure_runtime_schema()
     _seed_demo_users()
     yield
 
