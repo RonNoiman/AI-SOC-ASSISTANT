@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
-from database.models import User, Conversation, Message
+from database.models import User, Conversation, Message, SecurityEvent
 from auth.middleware import require_admin
 
 router = APIRouter()
@@ -26,6 +26,17 @@ class UserOut(BaseModel):
         from_attributes = True
 
 
+class SecurityEventOut(BaseModel):
+    id: int
+    event_type: str
+    email: str | None
+    user_id: int | None
+    status: str
+    ip_address: str | None
+    details: str | None
+    created_at: str
+
+
 @router.get("/stats", response_model=StatsResponse)
 async def get_stats(
     _: User = Depends(require_admin),
@@ -44,3 +55,29 @@ async def list_users(
     db: Session = Depends(get_db),
 ):
     return db.query(User).all()
+
+
+@router.get("/security-events", response_model=list[SecurityEventOut])
+async def list_security_events(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    events = (
+        db.query(SecurityEvent)
+        .order_by(SecurityEvent.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return [
+        SecurityEventOut(
+            id=event.id,
+            event_type=event.event_type,
+            email=event.email,
+            user_id=event.user_id,
+            status=event.status,
+            ip_address=event.ip_address,
+            details=event.details,
+            created_at=str(event.created_at),
+        )
+        for event in events
+    ]

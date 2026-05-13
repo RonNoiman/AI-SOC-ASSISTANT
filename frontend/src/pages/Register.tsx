@@ -68,8 +68,11 @@ export default function Register() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a password"
               required
-              minLength={6}
+              minLength={8}
             />
+            <p className="form-help">
+              Use at least 8 characters with uppercase, lowercase, number, and special character.
+            </p>
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>

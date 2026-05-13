@@ -5,6 +5,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   agent?: string;
+  createdAt: string;
 }
 
 const AGENT_COLORS: Record<string, string> = {
@@ -34,7 +35,8 @@ export default function Chat() {
     const text = input.trim();
     if (!text || sending) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    const now = new Date().toISOString();
+    setMessages((prev) => [...prev, { role: "user", content: text, createdAt: now }]);
     setInput("");
     setSending(true);
 
@@ -43,12 +45,12 @@ export default function Chat() {
       setConversationId(res.conversation_id);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: res.response, agent: res.agent },
+        { role: "assistant", content: res.response, agent: res.agent, createdAt: new Date().toISOString() },
       ]);
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Error: ${err.message}` },
+        { role: "assistant", content: `Error: ${err.message}`, createdAt: new Date().toISOString() },
       ]);
     } finally {
       setSending(false);
@@ -90,6 +92,13 @@ export default function Chat() {
                 </button>
               ))}
             </div>
+            <div className="chat-empty-note">
+              <h4>What This Assistant Does</h4>
+              <p>
+                It provides cybersecurity guidance by routing your question to a specialized
+                agent. It does not read live SIEM, firewall, or Active Directory data in this version.
+              </p>
+            </div>
           </div>
         )}
 
@@ -108,6 +117,9 @@ export default function Chat() {
               </div>
             )}
             <div className="bubble-content">{msg.content}</div>
+            <div className="bubble-meta">
+              {msg.role === "user" ? "You" : "Assistant"} • {new Date(msg.createdAt).toLocaleTimeString()}
+            </div>
           </div>
         ))}
 

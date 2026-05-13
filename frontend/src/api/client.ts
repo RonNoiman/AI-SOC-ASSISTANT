@@ -132,7 +132,19 @@ export interface AdminUser {
   is_active: boolean;
 }
 
+export interface SecurityEvent {
+  id: number;
+  event_type: string;
+  email: string | null;
+  user_id: number | null;
+  status: string;
+  ip_address: string | null;
+  details: string | null;
+  created_at: string;
+}
+
 export const admin = {
   stats: () => request<Stats>("/api/admin/stats"),
   users: () => request<AdminUser[]>("/api/admin/users"),
+  securityEvents: () => request<SecurityEvent[]>("/api/admin/security-events"),
 };

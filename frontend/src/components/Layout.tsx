@@ -21,6 +21,9 @@ export default function Layout() {
             <span className="logo-icon">&#9737;</span>
             <span>SOC Assistant</span>
           </div>
+          <p className="sidebar-subtitle">
+            Multi-agent guidance for network, identity, and policy questions.
+          </p>
         </div>
 
         <div className="nav-links">

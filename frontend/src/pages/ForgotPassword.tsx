@@ -101,9 +101,12 @@ export default function ForgotPassword() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Create a new password"
-              minLength={6}
+              minLength={8}
               required
             />
+            <p className="form-help">
+              Use at least 8 characters with uppercase, lowercase, number, and special character.
+            </p>
           </div>
 
           <div className="form-group">
@@ -113,7 +116,7 @@ export default function ForgotPassword() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Repeat the new password"
-              minLength={6}
+              minLength={8}
               required
             />
           </div>

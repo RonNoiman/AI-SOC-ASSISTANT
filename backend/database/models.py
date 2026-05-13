@@ -15,6 +15,8 @@ class User(Base):
     full_name = Column(String(255))
     role = Column(String(50), default="analyst")
     is_active = Column(Boolean, default=True)
+    failed_login_attempts = Column(Integer, default=0, nullable=False)
+    locked_until = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     conversations = relationship("Conversation", back_populates="user")
@@ -58,3 +60,16 @@ class PasswordResetToken(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="password_reset_tokens")
+
+
+class SecurityEvent(Base):
+    __tablename__ = "security_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String(100), nullable=False, index=True)
+    email = Column(String(255), nullable=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    status = Column(String(50), nullable=False)
+    ip_address = Column(String(64), nullable=True)
+    details = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)

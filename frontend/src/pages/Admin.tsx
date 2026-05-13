@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { admin, type Stats, type AdminUser } from "../api/client";
+import { admin, type Stats, type AdminUser, type SecurityEvent } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 
@@ -7,14 +7,16 @@ export default function Admin() {
   const { user } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [events, setEvents] = useState<SecurityEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([admin.stats(), admin.users()])
-      .then(([s, u]) => {
+    Promise.all([admin.stats(), admin.users(), admin.securityEvents()])
+      .then(([s, u, e]) => {
         setStats(s);
         setUsers(u);
+        setEvents(e);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -75,6 +77,43 @@ export default function Admin() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="admin-section">
+        <h3>Recent Security Events</h3>
+        {events.length === 0 ? (
+          <div className="panel-note">
+            <strong>No security events recorded yet.</strong>
+            <span>Login attempts, password resets, and lockouts will appear here.</span>
+          </div>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>Status</th>
+                <th>Email</th>
+                <th>IP</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr key={event.id}>
+                  <td>{new Date(event.created_at).toLocaleString()}</td>
+                  <td>{event.event_type}</td>
+                  <td>
+                    <span className={`event-badge ${event.status}`}>{event.status}</span>
+                  </td>
+                  <td>{event.email || "-"}</td>
+                  <td>{event.ip_address || "-"}</td>
+                  <td>{event.details || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

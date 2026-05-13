@@ -39,9 +39,12 @@ export default function History() {
       <div className="history-sidebar">
         <h2>Conversations</h2>
         {loading ? (
-          <p className="muted">Loading...</p>
+          <p className="panel-note">Loading conversations...</p>
         ) : convos.length === 0 ? (
-          <p className="muted">No conversations yet.</p>
+          <div className="panel-note">
+            <strong>No conversations yet.</strong>
+            <span>Start a chat to build searchable history for the analyst.</span>
+          </div>
         ) : (
           <div className="convo-list">
             {convos.map((c) => (
@@ -71,10 +74,13 @@ export default function History() {
       <div className="history-detail">
         {!selected ? (
           <div className="history-empty">
-            <p className="muted">Select a conversation to view messages</p>
+            <div className="panel-note panel-note-centered">
+              <strong>Select a conversation</strong>
+              <span>Review previous analyst questions, agent answers, and timestamps.</span>
+            </div>
           </div>
         ) : msgLoading ? (
-          <p className="muted">Loading messages...</p>
+          <p className="panel-note">Loading messages...</p>
         ) : (
           <div className="message-list">
             {messages.map((m) => (
