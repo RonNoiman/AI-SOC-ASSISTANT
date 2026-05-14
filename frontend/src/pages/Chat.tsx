@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { chat } from "../api/client";
+import { useParams, useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { chat, conversations } from "../api/client";
+import SeverityBadge from "../components/SeverityBadge";
+
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   agent?: string;
+  severity?: string | null;
   createdAt: string;
 }
 
@@ -33,15 +39,59 @@ function agentLabel(agent?: string) {
 }
 
 export default function Chat() {
+  const { conversationId: routeId } = useParams();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<number | undefined>();
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Resume an existing conversation when navigated to /chat/:conversationId
+  // (from the History page). Plain /chat resets to a clean slate.
+  useEffect(() => {
+    if (!routeId) {
+      setMessages([]);
+      setConversationId(undefined);
+      return;
+    }
+    const id = Number(routeId);
+    if (Number.isNaN(id)) {
+      navigate("/chat", { replace: true });
+      return;
+    }
+    let cancelled = false;
+    setLoadingHistory(true);
+    (async () => {
+      try {
+        const msgs = await conversations.messages(id);
+        if (cancelled) return;
+        setMessages(
+          msgs.map((m) => ({
+            role: m.role === "user" ? "user" : "assistant",
+            content: m.content,
+            agent: m.agent_used ?? undefined,
+            severity: m.severity,
+            createdAt: m.created_at,
+          }))
+        );
+        setConversationId(id);
+      } catch {
+        // Not found or not owned by this user - fall back to a fresh chat.
+        if (!cancelled) navigate("/chat", { replace: true });
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeId, navigate]);
 
   const handleSend = async () => {
     const text = input.trim();
@@ -61,6 +111,7 @@ export default function Chat() {
           role: "assistant",
           content: res.response,
           agent: res.agent,
+          severity: res.severity,
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -81,6 +132,8 @@ export default function Chat() {
   const handleNewChat = () => {
     setMessages([]);
     setConversationId(undefined);
+    // If we were resuming a conversation, drop the :id from the URL too.
+    if (routeId) navigate("/chat");
   };
 
   return (
@@ -93,7 +146,13 @@ export default function Chat() {
       </div>
 
       <div className="chat-messages">
-        {messages.length === 0 && (
+        {loadingHistory && messages.length === 0 && (
+          <div className="chat-empty">
+            <p>Loading conversation...</p>
+          </div>
+        )}
+
+        {!loadingHistory && messages.length === 0 && (
           <div className="chat-empty">
             <span className="chat-empty-icon">&#9737;</span>
             <h3>SOC Assistant Ready</h3>
@@ -119,18 +178,27 @@ export default function Chat() {
         {messages.map((msg, i) => (
           <div key={i} className={`chat-bubble ${msg.role}`}>
             {msg.role === "assistant" && msg.agent && (
-              <div
-                className="agent-badge"
-                style={{ color: agentColor(msg.agent) }}
-              >
-                <span
-                  className="agent-dot"
-                  style={{ background: agentColor(msg.agent) }}
-                />
-                {agentLabel(msg.agent)}
+              <div className="bubble-meta">
+                <div
+                  className="agent-badge"
+                  style={{ color: agentColor(msg.agent) }}
+                >
+                  <span
+                    className="agent-dot"
+                    style={{ background: agentColor(msg.agent) }}
+                  />
+                  {agentLabel(msg.agent)}
+                </div>
+                <SeverityBadge severity={msg.severity} />
               </div>
             )}
-            <div className="bubble-content">{msg.content}</div>
+            <div className="bubble-content">
+              {msg.role === "assistant" ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+              ) : (
+                msg.content
+              )}
+            </div>
           </div>
         ))}
 

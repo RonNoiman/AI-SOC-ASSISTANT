@@ -2,6 +2,31 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Light Theme */
+  --bg-primary:   #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary:  #f1f5f9;
+  --bg-surface:   #e2e8f0;
+  --border:       #cbd5e1;
+  --border-light: #94a3b8;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted:   #64748b;
+  --accent:       #0284c7;
+  --accent-dim:   rgba(2, 132, 199, 0.1);
+  --green:        #059669;
+  --green-dim:    rgba(5, 150, 105, 0.1);
+  --red:          #dc2626;
+  --red-dim:      rgba(220, 38, 38, 0.1);
+  --yellow:       #d97706;
+  --purple:       #7c3aed;
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+[data-theme='dark'] {
+  /* Dark Theme (Original) */
   --bg-primary:   #0a0e17;
   --bg-secondary: #111827;
   --bg-tertiary:  #1a2235;
@@ -19,19 +44,17 @@
   --red-dim:      rgba(239, 68, 68, 0.15);
   --yellow:       #f59e0b;
   --purple:       #a78bfa;
+}
 
-  --sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
-
-  font-family: var(--sans);
+body {
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
-  background: var(--bg-primary);
+  background-color: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
-
-body { min-height: 100vh; }
 #root { min-height: 100vh; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -305,6 +328,7 @@ a:hover { text-decoration: underline; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-primary);
 }
 
 .loading-screen {
@@ -483,10 +507,50 @@ a:hover { text-decoration: underline; }
 
 .bubble-content { white-space: pre-wrap; }
 
+/* Badge row above an assistant bubble: agent label + triage severity. */
 .bubble-meta {
-  margin-top: 0.55rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+.bubble-meta .agent-badge {
+  margin-bottom: 0;
+}
+
+/* ── Triage severity badge (shared by Chat + History) ── */
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  line-height: 1.4;
+}
+.severity-badge.sev-critical {
+  color: var(--red);
+  background: var(--red-dim);
+}
+.severity-badge.sev-high {
+  color: var(--yellow);
+  background: rgba(245, 158, 11, 0.12);
+}
+.severity-badge.sev-medium {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.severity-badge.sev-low {
+  color: var(--green);
+  background: var(--green-dim);
+}
+.severity-badge.sev-informational {
   color: var(--text-muted);
-  font-size: 0.72rem;
+  background: var(--bg-surface);
 }
 
 .typing-indicator {
@@ -717,6 +781,27 @@ a:hover { text-decoration: underline; }
   white-space: pre-wrap;
 }
 
+/* Assistant replies are structured Markdown - let block elements flow. */
+.history-msg.assistant .msg-content { white-space: normal; }
+.history-msg.assistant .msg-content h1,
+.history-msg.assistant .msg-content h2,
+.history-msg.assistant .msg-content h3 {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  margin: 0.75rem 0 0.35rem;
+}
+.history-msg.assistant .msg-content h3:first-child { margin-top: 0; }
+.history-msg.assistant .msg-content p { margin-bottom: 0.5rem; }
+.history-msg.assistant .msg-content ul,
+.history-msg.assistant .msg-content ol { margin: 0 0 0.5rem 1.25rem; }
+.history-msg.assistant .msg-content code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--bg-tertiary);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
 /* ── Admin Page ── */
 .admin-page {
   padding: 1.5rem 2rem;
@@ -863,3 +948,199 @@ a:hover { text-decoration: underline; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Admin extras (tabs, policy form, audit details) ── */
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-light);
+  margin: 1.25rem 0 1rem;
+}
+
+.admin-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.admin-tab:hover { color: var(--text-secondary); }
+
+.admin-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent, #00d4ff);
+}
+
+.policy-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.policy-form input[type="text"] {
+  flex: 1 1 240px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-input, #0f1419);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.audit-details {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  max-width: 320px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.role-badge.success,
+.role-badge.created,
+.role-badge.locked,
+.role-badge.blocked,
+.role-badge.deleted,
+.role-badge.failed,
+.role-badge.ignored {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.role-badge.success { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.role-badge.created { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
+.role-badge.deleted { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.role-badge.locked,
+.role-badge.blocked,
+.role-badge.failed { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.role-badge.ignored { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+/* ── History search ── */
+/* ── History search + filter controls ── */
+.history-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-search {
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-input, var(--bg-tertiary));
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.92rem;
+}
+
+.history-filters {
+  display: flex;
+  gap: 0.4rem;
+}
+.history-filters select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-input, var(--bg-tertiary));
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.convo-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+.convo-agent-chip {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.history-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+.history-detail-header h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Markdown Overrides ── */
+.bubble-content p {
+  margin-bottom: 0.75rem;
+}
+.bubble-content p:last-child {
+  margin-bottom: 0;
+}
+.bubble-content pre {
+  background: var(--bg-primary);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.bubble-content code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--bg-primary);
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+}
+.bubble-content pre code {
+  background: transparent;
+  padding: 0;
+}
+.bubble-content ul, .bubble-content ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.bubble-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+.bubble-content th, .bubble-content td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+.bubble-content th {
+  background: var(--bg-tertiary);
+  font-weight: 600;
+}

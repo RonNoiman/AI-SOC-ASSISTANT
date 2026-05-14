@@ -88,7 +88,13 @@ export const auth = {
 // Chat
 export const chat = {
   send: (message: string, conversation_id?: number) =>
-    request<{ response: string; agent: string; conversation_id: number }>("/api/chat/", {
+    request<{
+      response: string;
+      agent: string;
+      conversation_id: number;
+      blocked?: boolean;
+      severity: string | null;
+    }>("/api/chat/", {
       method: "POST",
       body: JSON.stringify({ message, conversation_id }),
     }),
@@ -99,7 +105,10 @@ export interface ConversationSummary {
   id: number;
   title: string;
   created_at: string;
+  updated_at: string;
   message_count: number;
+  agents: string[];
+  top_severity: string | null;
 }
 
 export interface Message {
@@ -107,11 +116,29 @@ export interface Message {
   role: string;
   content: string;
   agent_used: string | null;
+  severity: string | null;
   created_at: string;
 }
 
+export interface ConversationFilters {
+  q?: string;
+  agent?: string;
+  severity?: string;
+  sort?: "newest" | "oldest";
+}
+
 export const conversations = {
-  list: () => request<ConversationSummary[]>("/api/conversations/"),
+  list: (filters: ConversationFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.q && filters.q.trim()) params.set("q", filters.q.trim());
+    if (filters.agent) params.set("agent", filters.agent);
+    if (filters.severity) params.set("severity", filters.severity);
+    if (filters.sort) params.set("sort", filters.sort);
+    const query = params.toString();
+    return request<ConversationSummary[]>(
+      `/api/conversations/${query ? `?${query}` : ""}`
+    );
+  },
   messages: (id: number) => request<Message[]>(`/api/conversations/${id}/messages`),
   delete: (id: number) =>
     request<{ detail: string }>(`/api/conversations/${id}`, { method: "DELETE" }),
@@ -122,6 +149,8 @@ export interface Stats {
   total_users: number;
   total_conversations: number;
   total_messages: number;
+  total_security_events: number;
+  locked_users: number;
 }
 
 export interface AdminUser {
@@ -130,6 +159,8 @@ export interface AdminUser {
   full_name: string | null;
   role: string;
   is_active: boolean;
+  failed_login_attempts: number;
+  is_locked: boolean;
 }
 
 export interface SecurityEvent {
@@ -143,8 +174,49 @@ export interface SecurityEvent {
   created_at: string;
 }
 
+export interface GuardrailPolicy {
+  id: number;
+  pattern: string;
+  reason: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export const admin = {
   stats: () => request<Stats>("/api/admin/stats"),
   users: () => request<AdminUser[]>("/api/admin/users"),
-  securityEvents: () => request<SecurityEvent[]>("/api/admin/security-events"),
+  unlockUser: (id: number) =>
+    request<{ detail: string; was_locked: boolean }>(`/api/admin/users/${id}/unlock`, {
+      method: "POST",
+    }),
+  updateUserRole: (id: number, role: string) =>
+    request<{ detail: string }>(`/api/admin/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  updateUserStatus: (id: number, is_active: boolean) =>
+    request<{ detail: string }>(`/api/admin/users/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active }),
+    }),
+  deleteUser: (id: number) =>
+    request<{ detail: string }>(`/api/admin/users/${id}`, {
+      method: "DELETE",
+    }),
+  securityEvents: (eventType?: string, limit = 100) => {
+    const params = new URLSearchParams();
+    if (eventType) params.set("event_type", eventType);
+    params.set("limit", String(limit));
+    return request<SecurityEvent[]>(`/api/admin/security-events?${params.toString()}`);
+  },
+  listPolicies: () => request<GuardrailPolicy[]>("/api/admin/guardrail-policies"),
+  createPolicy: (pattern: string, reason: string) =>
+    request<GuardrailPolicy>("/api/admin/guardrail-policies", {
+      method: "POST",
+      body: JSON.stringify({ pattern, reason }),
+    }),
+  deletePolicy: (id: number) =>
+    request<{ detail: string }>(`/api/admin/guardrail-policies/${id}`, {
+      method: "DELETE",
+    }),
 };

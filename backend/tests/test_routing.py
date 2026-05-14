@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from agents.orchestrator import Orchestrator, _keyword_classify
+from agents.base import extract_severity, VALID_SEVERITIES, DEFAULT_SEVERITY
+from agents.network_agent import NetworkAgent
 
 
 @pytest.fixture
@@ -64,3 +66,45 @@ def test_keyword_classify_identity():
 def test_keyword_classify_network_default():
     text = "Multiple failed RDP connections to port 3389 from unknown IPs"
     assert _keyword_classify(text) == "network"
+
+
+# ── Severity triage ──
+
+def test_extract_severity_parses_leading_line():
+    severity, body = extract_severity("SEVERITY: High\n### Summary\nSomething happened.")
+    assert severity == "High"
+    assert body.startswith("### Summary")
+    assert "SEVERITY" not in body
+
+
+def test_extract_severity_is_case_insensitive():
+    severity, _ = extract_severity("SEVERITY: critical\n### Summary\n...")
+    assert severity == "Critical"
+
+
+def test_extract_severity_falls_back_to_default():
+    """A response that ignores the format keeps its text and gets a safe default."""
+    severity, body = extract_severity("Here is some unstructured analysis.")
+    assert severity == DEFAULT_SEVERITY
+    assert body == "Here is some unstructured analysis."
+
+
+@pytest.mark.asyncio
+async def test_agent_demo_mode_returns_structured_result():
+    """With no LLM client an agent still returns the {response, severity} shape."""
+    agent = NetworkAgent(client=None)
+    result = await agent.run("Port scan from 10.0.0.5", history=[])
+    assert set(result) == {"response", "severity"}
+    assert result["severity"] in VALID_SEVERITIES
+    assert "### Recommended Actions" in result["response"]
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_handle_includes_severity():
+    """orchestrator.handle() surfaces the agent's severity to the API layer."""
+    with patch("agents.orchestrator._build_client", return_value=None):
+        orch = Orchestrator()
+    result = await orch.handle("Suspicious traffic to port 4444", [])
+    assert result["agent"] == "network"
+    assert result["severity"] in VALID_SEVERITIES
+    assert isinstance(result["response"], str) and result["response"]

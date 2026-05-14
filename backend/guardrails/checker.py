@@ -1,4 +1,5 @@
 import re
+from typing import Iterable
 
 
 class GuardrailChecker:
@@ -26,18 +27,43 @@ class GuardrailChecker:
     ]
 
     @classmethod
-    def check_input(cls, query: str) -> dict:
-        """Check if user input is safe and on-topic. Returns {safe: bool, reason: str|None}."""
+    def check_input(cls, query: str, extra_patterns: Iterable[str] | None = None) -> dict:
+        """Check if user input is safe and on-topic.
+
+        Built-in patterns are always evaluated. `extra_patterns` are additional
+        regexes (typically loaded from the GuardrailPolicy table) applied on top.
+        Returns {safe: bool, reason: str|None, matched_pattern: str|None}.
+        """
         for pattern in cls.BLOCKED_PATTERNS:
             if re.search(pattern, query):
-                return {"safe": False, "reason": "Prompt injection attempt detected."}
+                return {
+                    "safe": False,
+                    "reason": "Prompt injection or offensive request detected.",
+                    "matched_pattern": pattern,
+                }
+
+        for pattern in (extra_patterns or []):
+            try:
+                if re.search(pattern, query):
+                    return {
+                        "safe": False,
+                        "reason": "Blocked by admin guardrail policy.",
+                        "matched_pattern": pattern,
+                    }
+            except re.error:
+                # A bad admin-supplied regex should not crash chat.
+                continue
 
         query_lower = query.lower()
         for keyword in cls.OFF_TOPIC_KEYWORDS:
             if keyword in query_lower:
-                return {"safe": False, "reason": "Query is not related to security operations."}
+                return {
+                    "safe": False,
+                    "reason": "Query is not related to security operations.",
+                    "matched_pattern": keyword,
+                }
 
-        return {"safe": True, "reason": None}
+        return {"safe": True, "reason": None, "matched_pattern": None}
 
     @classmethod
     def check_output(cls, response: str) -> dict:

@@ -110,6 +110,14 @@ async def login(body: LoginRequest, request: Request, db: Session = Depends(get_
         logger.warning("LOGIN_FAILED email=%s reason=unknown_email", body.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    
+    if not user.is_active:
+        AuthService.log_security_event(
+            db, event_type="login_attempt", status="blocked", email=user.email, user_id=user.id,
+            ip_address=_ip(request), details="Account is deactivated"
+        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated. Contact an administrator.")
+
     if AuthService.is_user_locked(user):
         AuthService.log_security_event(
             db,

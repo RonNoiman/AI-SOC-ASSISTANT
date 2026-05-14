@@ -9,7 +9,14 @@ import Chat from "./pages/Chat";
 import History from "./pages/History";
 import Admin from "./pages/Admin";
 
+import { useEffect } from "react";
+
 export default function App() {
+  useEffect(() => {
+    const theme = localStorage.getItem("theme") || "dark";
+    document.documentElement.setAttribute("data-theme", theme);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -25,6 +32,7 @@ export default function App() {
             }
           >
             <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:conversationId" element={<Chat />} />
             <Route path="/history" element={<History />} />
             <Route path="/admin" element={<Admin />} />
           </Route>

@@ -86,12 +86,17 @@ class Orchestrator:
             return _keyword_classify(query)
 
     async def handle(self, query: str, conversation_history: list[dict] | None = None) -> dict:
-        """Route query to the right agent and return the response."""
+        """Route query to the right agent and return its structured triage result.
+
+        Returns ``{"agent": name, "response": markdown, "severity": level}``.
+        """
         agent_name = await self.classify_query(query)
         agent = self.agents[agent_name]
         logger.info("ROUTE category=%s query_preview=%r", agent_name, query[:80])
-        response = await agent.run(query, conversation_history or [])
+        result = await agent.run(query, conversation_history or [])
+        logger.info("TRIAGE agent=%s severity=%s", agent_name, result["severity"])
         return {
             "agent": agent_name,
-            "response": response,
+            "response": result["response"],
+            "severity": result["severity"],
         }

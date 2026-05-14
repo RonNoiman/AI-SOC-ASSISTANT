@@ -22,21 +22,30 @@ def get_db():
 
 
 def ensure_runtime_schema():
+    """Apply lightweight additive migrations for SQLite demo databases.
+
+    New nullable columns are added in place so an existing soc_assistant.db
+    keeps working without a manual drop. Each entry is (table, column, DDL).
+    """
     inspector = inspect(engine)
-    if "users" not in inspector.get_table_names():
-        return
+    tables = set(inspector.get_table_names())
 
-    existing_columns = {column["name"] for column in inspector.get_columns("users")}
+    migrations = [
+        ("users", "failed_login_attempts",
+         "ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0"),
+        ("users", "locked_until",
+         "ALTER TABLE users ADD COLUMN locked_until DATETIME"),
+        ("messages", "severity",
+         "ALTER TABLE messages ADD COLUMN severity VARCHAR(20)"),
+    ]
+
     statements: list[str] = []
-
-    if "failed_login_attempts" not in existing_columns:
-        statements.append(
-            "ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0"
-        )
-    if "locked_until" not in existing_columns:
-        statements.append(
-            "ALTER TABLE users ADD COLUMN locked_until DATETIME"
-        )
+    for table, column, ddl in migrations:
+        if table not in tables:
+            continue
+        existing_columns = {col["name"] for col in inspector.get_columns(table)}
+        if column not in existing_columns:
+            statements.append(ddl)
 
     if not statements:
         return

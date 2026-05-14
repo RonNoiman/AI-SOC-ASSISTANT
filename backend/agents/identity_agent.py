@@ -1,43 +1,35 @@
-SYSTEM_PROMPT = """You are an Identity & Access Management Agent in a SOC (Security Operations Center).
-You specialize in:
-- User authentication and authorization issues
-- Active Directory / LDAP queries and troubleshooting
-- Access reviews and privilege escalation detection
-- MFA and SSO configuration guidance
-- Identity governance and lifecycle management
-
-Provide clear, defensive, actionable answers. Always consider the principle of least privilege
-and zero-trust architecture principles.
-Refuse to produce credential-theft tooling, password-cracking guidance, or any offensive tradecraft."""
-
-DEMO_RESPONSE = (
-    "[Demo mode - no LLM configured]\n\n"
-    "Identity & Authentication Agent received your event. Suggested defensive playbook:\n"
-    "1. Lock or temporarily disable the targeted account(s) and force a password reset.\n"
-    "2. Require MFA re-enrollment for the affected user.\n"
-    "3. Check geo / impossible-travel anomalies in the SIEM (Okta / Azure AD / Entra logs).\n"
-    "4. Pull recent privilege changes; revoke any unexpected role assignments.\n"
-    "5. Notify the user out-of-band and open an incident ticket.\n\n"
-    "Set GROQ_API_KEY in backend/.env to get full LLM-driven analysis."
-)
+from agents.base import BaseAgent
 
 
-class IdentityAgent:
-    def __init__(self, client):
-        self.client = client
+class IdentityAgent(BaseAgent):
+    """SOC specialist for identity & access events: auth, AD/LDAP, MFA, privileges."""
 
-    async def run(self, query: str, history: list[dict]) -> str:
-        if self.client is None:
-            return DEMO_RESPONSE
+    domain_name = "Identity & Access Management"
+    specialties = (
+        "- User authentication and authorization issues\n"
+        "- Active Directory / LDAP queries and troubleshooting\n"
+        "- Access reviews and privilege escalation detection\n"
+        "- MFA and SSO configuration guidance\n"
+        "- Identity governance and lifecycle management"
+    )
+    refusal_clause = (
+        "Refuse to produce credential-theft tooling, password-cracking guidance, "
+        "or any offensive tradecraft."
+    )
 
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        messages.extend(history)
-        messages.append({"role": "user", "content": query})
-
-        response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.3,
-            max_tokens=2048,
-        )
-        return response.choices[0].message.content
+    demo_summary = (
+        "An identity or authentication event was received and triaged by the "
+        "Identity & Access Management Agent."
+    )
+    demo_actions = [
+        "Lock or temporarily disable the targeted account(s) and force a password reset.",
+        "Require MFA re-enrollment for the affected user.",
+        "Check geo / impossible-travel anomalies in the SIEM (Okta / Azure AD / Entra logs).",
+        "Pull recent privilege changes; revoke any unexpected role assignments.",
+        "Notify the user out-of-band and open an incident ticket.",
+    ]
+    demo_escalation = (
+        "Notify the SOC lead; escalate to the IAM team and the user's manager if "
+        "account compromise is confirmed."
+    )
+    demo_severity = "High"

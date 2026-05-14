@@ -49,6 +49,9 @@ class Message(Base):
     role = Column(String(20), nullable=False)  # "user" or "assistant"
     content = Column(Text, nullable=False)
     agent_used = Column(String(50), nullable=True)
+    # Triage severity for assistant messages: Critical/High/Medium/Low/Informational.
+    # Null for user messages and guardrail-blocked replies.
+    severity = Column(String(20), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     conversation = relationship("Conversation", back_populates="messages")
@@ -78,3 +81,14 @@ class SecurityEvent(Base):
     ip_address = Column(String(64), nullable=True)
     details = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+
+class GuardrailPolicy(Base):
+    __tablename__ = "guardrail_policies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pattern = Column(String(500), nullable=False)
+    reason = Column(String(255), nullable=False, default="Custom policy")
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
