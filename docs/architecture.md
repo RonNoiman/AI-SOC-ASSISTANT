@@ -58,7 +58,7 @@ At this stage, the core structure is based on:
 Even though not all conversation functionality is presented in this milestone, the data model already supports future system expansion.
 
 **Technologies:**
-- PostgreSQL
+- SQLite
 - SQLAlchemy
 
 ---
@@ -71,7 +71,7 @@ flowchart LR
     UI[Frontend UI\nReact + TypeScript]
     API[Backend API\nFastAPI]
     AUTH[Authentication Layer\nJWT + Passlib]
-    DB[(PostgreSQL)]
+    DB[(SQLite)]
     MODELS[SQLAlchemy Models]
 
     U --> UI

@@ -37,6 +37,8 @@ def ensure_runtime_schema():
          "ALTER TABLE users ADD COLUMN locked_until DATETIME"),
         ("messages", "severity",
          "ALTER TABLE messages ADD COLUMN severity VARCHAR(20)"),
+        ("messages", "transparency",
+         "ALTER TABLE messages ADD COLUMN transparency TEXT"),
     ]
 
     statements: list[str] = []

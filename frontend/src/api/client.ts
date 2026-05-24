@@ -86,6 +86,16 @@ export const auth = {
 };
 
 // Chat
+export interface Transparency {
+  severity: string;
+  confidence_score: number;
+  threat_id: string | null;
+  stride_category: string | null;
+  matched_indicators: string[];
+  reasoning: string;
+  recommended_action: string;
+}
+
 export const chat = {
   send: (message: string, conversation_id?: number) =>
     request<{
@@ -94,6 +104,7 @@ export const chat = {
       conversation_id: number;
       blocked?: boolean;
       severity: string | null;
+      transparency: Transparency | null;
     }>("/api/chat/", {
       method: "POST",
       body: JSON.stringify({ message, conversation_id }),
@@ -105,6 +116,7 @@ export interface ConversationSummary {
   id: number;
   title: string;
   created_at: string;
+  acknowledged: boolean;
   updated_at: string;
   message_count: number;
   agents: string[];
@@ -117,7 +129,9 @@ export interface Message {
   content: string;
   agent_used: string | null;
   severity: string | null;
+  transparency: Transparency | null;
   created_at: string;
+  acknowledged: boolean;
 }
 
 export interface ConversationFilters {
@@ -172,6 +186,7 @@ export interface SecurityEvent {
   ip_address: string | null;
   details: string | null;
   created_at: string;
+  acknowledged: boolean;
 }
 
 export interface GuardrailPolicy {
@@ -180,6 +195,90 @@ export interface GuardrailPolicy {
   reason: string;
   is_active: boolean;
   created_at: string;
+  acknowledged: boolean;
+}
+
+// Reference (Knowledge Base) ─ shapes match backend/data/*.py
+export interface SeverityLevel {
+  level: string;
+  color: string;
+  what_it_means: string;
+  typical_indicators: string[];
+  typical_scenarios: string[];
+  why_dangerous: string;
+  why_not_higher: string;
+  why_not_lower: string;
+  response_sla: string;
+}
+
+export interface Threat {
+  id: string;
+  name: string;
+  stride_category: string;
+  primary_agent: string;
+  description: string;
+  attack_example: string;
+  detection_indicators: string[];
+  mitigation: string;
+}
+
+export interface StrideScenario {
+  attack: string;
+  affected_component: string;
+  risk: string;
+  mitigation: string;
+  residual_risk: string;
+}
+
+export interface StrideCategory {
+  category: string;
+  definition: string;
+  scenarios: StrideScenario[];
+}
+
+export interface RiskMatrixRow {
+  threat_id: string;
+  threat: string;
+  stride: string;
+  likelihood: string;
+  impact: string;
+  severity: string;
+  affected_component: string;
+  mitigation: string;
+  residual_risk: string;
+  why_this_severity: string;
+}
+
+export interface MitreTechnique {
+  id: string;
+  name: string;
+  tactic: string;
+  description: string;
+  detection_indicators: string[];
+  mitigations: string[];
+  mitre_url: string;
+  // present when get_technique() resolved a sub-id to its parent:
+  requested_id?: string;
+  sub_technique?: boolean;
+}
+
+export const reference = {
+  severity: () => request<SeverityLevel[]>("/api/reference/severity"),
+  threats: () => request<Threat[]>("/api/reference/threats"),
+  stride: () => request<StrideCategory[]>("/api/reference/stride"),
+  riskMatrix: () => request<RiskMatrixRow[]>("/api/reference/risk-matrix"),
+  mitre: () => request<MitreTechnique[]>("/api/reference/mitre"),
+};
+
+// Canonical attack.mitre.org URL for any ATT&CK ID (parent or sub-technique).
+// Used by the autolinker and the "not in dictionary" fallback card.
+export function mitreUrl(id: string): string {
+  const canonical = id.trim().toUpperCase();
+  if (canonical.includes(".")) {
+    const [parent, sub] = canonical.split(".", 2);
+    return `https://attack.mitre.org/techniques/${parent}/${sub}/`;
+  }
+  return `https://attack.mitre.org/techniques/${canonical}/`;
 }
 
 export const admin = {
@@ -209,6 +308,14 @@ export const admin = {
     params.set("limit", String(limit));
     return request<SecurityEvent[]>(`/api/admin/security-events?${params.toString()}`);
   },
+      acknowledgeAllEvents: () =>
+    request<{ detail: string }>(`/api/admin/security-events/acknowledge-all`, {
+      method: "POST",
+    }),
+  acknowledgeEvent: (id: number) =>
+    request<{ detail: string }>(`/api/admin/security-events/${id}/acknowledge`, {
+      method: "POST",
+    }),
   listPolicies: () => request<GuardrailPolicy[]>("/api/admin/guardrail-policies"),
   createPolicy: (pattern: string, reason: string) =>
     request<GuardrailPolicy>("/api/admin/guardrail-policies", {

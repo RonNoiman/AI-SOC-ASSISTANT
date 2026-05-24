@@ -34,3 +34,18 @@ class PolicyAgent(BaseAgent):
         "the policy is ambiguous or a regulatory obligation is in question."
     )
     demo_severity = "Informational"
+    demo_threat_id = "T7"  # Policy / Compliance question is the canonical demo case.
+    demo_stride = "Repudiation"
+    demo_confidence = 0.7
+    demo_indicators = [
+        "Question references a control or regulation",
+        "No live security event detected",
+    ]
+    demo_reasoning = (
+        "This is a policy / compliance question rather than an active incident; "
+        "severity is Informational because there is no malicious signal."
+    )
+    demo_recommended_action = (
+        "Cite the controlling policy or regulation, document the decision, and "
+        "capture sign-off in the audit trail."
+    )

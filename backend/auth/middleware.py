@@ -21,10 +21,16 @@ async def get_current_user(
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
+    if AuthService.is_user_locked(user):
+        raise HTTPException(status_code=status.HTTP_423_LOCKED, detail="Account is temporarily locked")
+
     return user
 
 
 async def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    if AuthService.is_user_locked(user):
+        raise HTTPException(status_code=status.HTTP_423_LOCKED, detail="Account is temporarily locked")
+
     return user

@@ -1144,3 +1144,433 @@ a:hover { text-decoration: underline; }
   background: var(--bg-tertiary);
   font-weight: 600;
 }
+
+/* ── AI Decision Reasoning panel ── */
+.transparency-panel {
+  margin-top: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+.transparency-panel.open {
+  background: var(--bg-secondary);
+}
+.transparency-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+}
+.transparency-toggle:hover {
+  color: var(--text-primary);
+}
+.transparency-toggle-label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+.transparency-panel.open .transparency-toggle-label {
+  color: var(--accent);
+}
+.transparency-toggle-meta {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.transparency-body {
+  padding: 0.5rem 0.85rem 0.85rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.transparency-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.transparency-row-block {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+.transparency-label {
+  flex: 0 0 9rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.transparency-row-block .transparency-label {
+  flex: 0 0 auto;
+}
+.transparency-confidence {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.transparency-confidence-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.transparency-confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  transition: width 0.3s ease;
+}
+.transparency-confidence-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-width: 3rem;
+  text-align: right;
+}
+.transparency-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+.transparency-chip-threat {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.transparency-chip-stride {
+  color: var(--purple);
+  border-color: var(--purple);
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
+}
+.transparency-indicators {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.transparency-indicators li {
+  font-size: 0.85rem;
+}
+.transparency-text {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
+/* Clickable chips inside the transparency panel are <Link>s. */
+a.transparency-chip { text-decoration: none; }
+a.transparency-chip:hover { filter: brightness(1.1); text-decoration: none; }
+a.severity-badge { text-decoration: none; }
+a.severity-badge:hover { filter: brightness(1.1); text-decoration: none; }
+
+/* ── Knowledge Base page ── */
+.knowledge-page {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  height: 100vh;
+}
+.knowledge-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+}
+.knowledge-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  max-width: 760px;
+  margin-bottom: 1.25rem;
+}
+.knowledge-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.knowledge-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+.knowledge-tab:hover { color: var(--text-secondary); }
+.knowledge-tab.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+.knowledge-blurb {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  max-width: 760px;
+}
+.knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.knowledge-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.knowledge-card.open {
+  border-color: var(--accent);
+}
+.knowledge-card-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.knowledge-card-toggle:hover { background: var(--bg-tertiary); }
+.knowledge-card.threat-card .knowledge-card-toggle {
+  grid-template-columns: auto 1fr auto auto;
+}
+.knowledge-card.stride-card .knowledge-card-toggle {
+  grid-template-columns: auto 1fr auto;
+}
+.knowledge-card.sev-card .knowledge-card-toggle {
+  grid-template-columns: auto auto 1fr auto;
+}
+.knowledge-card-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+.knowledge-card-sub {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.knowledge-card-caret {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.knowledge-card-body {
+  padding: 0.5rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+/* Severity card markers — small dot in the brand colour of that level. */
+.sev-card-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  display: inline-block;
+}
+/* Threat ID pill on the left of every threat card. */
+.threat-id {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.threat-stride {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--purple);
+  font-weight: 600;
+}
+.stride-scenario {
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+/* Shared row primitives inside knowledge cards. */
+.kb-row { display: flex; gap: 0.75rem; align-items: center; }
+.kb-row-block { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+.kb-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.kb-text {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.kb-text-mono {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: var(--bg-tertiary);
+  padding: 0.25rem 0.45rem;
+  border-radius: 4px;
+}
+.kb-text-pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.kb-text-future {
+  border-left: 3px solid var(--yellow);
+  padding-left: 0.6rem;
+  background: rgba(245, 158, 11, 0.06);
+  border-radius: 4px;
+}
+.kb-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.kb-list li {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+/* ── Risk Matrix table ── */
+.risk-matrix-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-surface);
+}
+.risk-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 1100px;
+}
+.risk-matrix th,
+.risk-matrix td {
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.risk-matrix th {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.risk-matrix td { color: var(--text-secondary); }
+.risk-matrix tbody tr:last-child td { border-bottom: 0; }
+.risk-matrix-mono {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+.rm-pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.rm-pill.rm-high { background: var(--red-dim); color: var(--red); }
+.rm-pill.rm-medium { background: rgba(245, 158, 11, 0.15); color: var(--yellow); }
+.rm-pill.rm-low { background: var(--green-dim); color: var(--green); }
+
+/* MITRE ATT&CK technique cards reuse the threat-card layout but with a
+   purple-coded tactic chip. */
+.mitre-id {
+  /* Same as .threat-id but a touch wider to fit "T1190" / "T1021.001". */
+  letter-spacing: 0.02em;
+}
+.mitre-tactic {
+  color: var(--purple);
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.mitre-fallback {
+  border-color: var(--yellow);
+  background: color-mix(in srgb, var(--yellow) 10%, var(--bg-surface));
+}
+.kb-text-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+.kb-text-link:hover { filter: brightness(1.15); }
+
+/* Auto-linked ATT&CK ID inside chat / history markdown. */
+.bubble-content a[href^="/knowledge?tab=mitre"],
+.msg-content a[href^="/knowledge?tab=mitre"] {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
+  color: var(--purple);
+  padding: 0 0.25rem;
+  border-radius: 4px;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--purple);
+}
+.bubble-content a[href^="/knowledge?tab=mitre"]:hover,
+.msg-content a[href^="/knowledge?tab=mitre"]:hover {
+  background: color-mix(in srgb, var(--purple) 20%, transparent);
+}

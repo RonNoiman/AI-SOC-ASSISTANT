@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Chat from "./pages/Chat";
 import History from "./pages/History";
+import Knowledge from "./pages/Knowledge";
 import Admin from "./pages/Admin";
 
 import { useEffect } from "react";
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:conversationId" element={<Chat />} />
             <Route path="/history" element={<History />} />
+            <Route path="/knowledge" element={<Knowledge />} />
             <Route path="/admin" element={<Admin />} />
           </Route>
           <Route path="*" element={<Navigate to="/chat" replace />} />

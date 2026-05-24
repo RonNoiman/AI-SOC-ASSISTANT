@@ -29,3 +29,19 @@ class NetworkAgent(BaseAgent):
         "exploitation is confirmed."
     )
     demo_severity = "Medium"
+    demo_threat_id = "T3"  # Reconnaissance / Port Scanning - the canonical demo case.
+    demo_stride = "Information Disclosure"
+    demo_confidence = 0.62
+    demo_indicators = [
+        "Connection attempts to multiple ports",
+        "Source IP without prior history",
+        "Repeated probes in a short window",
+    ]
+    demo_reasoning = (
+        "Network-layer probing pattern matches reconnaissance behaviour; severity "
+        "is Medium because exposure of the targeted services is not yet confirmed."
+    )
+    demo_recommended_action = (
+        "Block or rate-limit the source IP at the perimeter firewall and pull "
+        "IDS / IPS context for the last 24 hours."
+    )

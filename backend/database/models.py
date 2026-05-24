@@ -16,6 +16,7 @@ class User(Base):
     role = Column(String(50), default="analyst")
     is_active = Column(Boolean, default=True)
     failed_login_attempts = Column(Integer, default=0, nullable=False)
+    guardrail_strikes = Column(Integer, default=0, nullable=False)
     locked_until = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -52,6 +53,10 @@ class Message(Base):
     # Triage severity for assistant messages: Critical/High/Medium/Low/Informational.
     # Null for user messages and guardrail-blocked replies.
     severity = Column(String(20), nullable=True)
+    # Full AI-decision-transparency record as JSON text: confidence_score,
+    # threat_id, stride_category, matched_indicators, reasoning, recommended_action.
+    # Null for user messages and guardrail-blocked replies.
+    transparency = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     conversation = relationship("Conversation", back_populates="messages")
@@ -80,6 +85,7 @@ class SecurityEvent(Base):
     status = Column(String(50), nullable=False)
     ip_address = Column(String(64), nullable=True)
     details = Column(Text, nullable=True)
+    acknowledged = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
 

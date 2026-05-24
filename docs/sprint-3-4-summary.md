@@ -21,7 +21,7 @@ To establish the initial technical infrastructure of the project:
 | Owner | Task | Tool / Technology Used | Status | Output |
 |---|---|---|---|---|
 | Maor Kurztag | Backend setup and API foundation | FastAPI, Python, Uvicorn | Done | Initial backend structure and application entry point |
-| Roi Noiman | Database planning and model implementation | PostgreSQL, SQLAlchemy | Done | User, Conversation, Message models and DB structure |
+| Roi Noiman | Database planning and model implementation | SQLite, SQLAlchemy | Done | User, Conversation, Message models and DB structure |
 | Daniel Gorodnitskiy | Frontend setup and UI flow preparation | React, TypeScript, Vite | Done | Initial frontend structure and routing foundation |
 
 ## Sprint 3 Deliverables
@@ -51,7 +51,7 @@ Main focus:
 | Owner | Task | Tool / Technology Used | Status | Output |
 |---|---|---|---|---|
 | Maor Kurztag | Authentication and API endpoint implementation | FastAPI, JWT, Passlib | Done | Register/Login endpoints and token-based auth flow |
-| Roi Noiman | Database integration for user authentication | PostgreSQL, SQLAlchemy, Python | Done | User persistence and backend user validation |
+| Roi Noiman | Database integration for user authentication | SQLite, SQLAlchemy, Python | Done | User persistence and backend user validation |
 | Daniel Gorodnitskiy | Login / Register pages and protected routing | React, TypeScript, React Router | Done | Functional login/register UI and protected frontend routes |
 
 ## Sprint 4 Deliverables

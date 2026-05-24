@@ -3,7 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { chat, conversations } from "../api/client";
+import type { Transparency } from "../api/client";
 import SeverityBadge from "../components/SeverityBadge";
+import TransparencyPanel from "../components/TransparencyPanel";
+import MarkdownLink from "../components/MarkdownLink";
+import { autoLinkMitre } from "../components/mitreAutoLink";
+
+const MD_COMPONENTS = { a: MarkdownLink } as const;
 
 
 interface ChatMessage {
@@ -11,6 +17,7 @@ interface ChatMessage {
   content: string;
   agent?: string;
   severity?: string | null;
+  transparency?: Transparency | null;
   createdAt: string;
 }
 
@@ -77,6 +84,7 @@ export default function Chat() {
             content: m.content,
             agent: m.agent_used ?? undefined,
             severity: m.severity,
+            transparency: m.transparency,
             createdAt: m.created_at,
           }))
         );
@@ -112,6 +120,7 @@ export default function Chat() {
           content: res.response,
           agent: res.agent,
           severity: res.severity,
+          transparency: res.transparency,
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -175,32 +184,48 @@ export default function Chat() {
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <div key={i} className={`chat-bubble ${msg.role}`}>
-            {msg.role === "assistant" && msg.agent && (
-              <div className="bubble-meta">
-                <div
-                  className="agent-badge"
-                  style={{ color: agentColor(msg.agent) }}
-                >
-                  <span
-                    className="agent-dot"
-                    style={{ background: agentColor(msg.agent) }}
-                  />
-                  {agentLabel(msg.agent)}
+        {messages.map((msg, i) => {
+          const isLatestAssistant =
+            msg.role === "assistant" &&
+            i === messages.length - 1;
+          return (
+            <div key={i} className={`chat-bubble ${msg.role}`}>
+              {msg.role === "assistant" && msg.agent && (
+                <div className="bubble-meta">
+                  <div
+                    className="agent-badge"
+                    style={{ color: agentColor(msg.agent) }}
+                  >
+                    <span
+                      className="agent-dot"
+                      style={{ background: agentColor(msg.agent) }}
+                    />
+                    {agentLabel(msg.agent)}
+                  </div>
+                  <SeverityBadge severity={msg.severity} />
                 </div>
-                <SeverityBadge severity={msg.severity} />
+              )}
+              <div className="bubble-content">
+                {msg.role === "assistant" ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={MD_COMPONENTS}
+                  >
+                    {autoLinkMitre(msg.content)}
+                  </ReactMarkdown>
+                ) : (
+                  msg.content
+                )}
               </div>
-            )}
-            <div className="bubble-content">
-              {msg.role === "assistant" ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-              ) : (
-                msg.content
+              {msg.role === "assistant" && msg.transparency && (
+                <TransparencyPanel
+                  transparency={msg.transparency}
+                  defaultOpen={isLatestAssistant}
+                />
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {sending && (
           <div className="chat-bubble assistant">

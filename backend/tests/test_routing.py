@@ -2,8 +2,14 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from agents.orchestrator import Orchestrator, _keyword_classify
-from agents.base import extract_severity, VALID_SEVERITIES, DEFAULT_SEVERITY
+from agents.base import (
+    extract_severity,
+    extract_transparency,
+    VALID_SEVERITIES,
+    DEFAULT_SEVERITY,
+)
 from agents.network_agent import NetworkAgent
+from data.threat_catalog import VALID_THREAT_IDS
 
 
 @pytest.fixture
@@ -91,20 +97,90 @@ def test_extract_severity_falls_back_to_default():
 
 @pytest.mark.asyncio
 async def test_agent_demo_mode_returns_structured_result():
-    """With no LLM client an agent still returns the {response, severity} shape."""
+    """In demo mode an agent returns response + severity + transparency."""
     agent = NetworkAgent(client=None)
     result = await agent.run("Port scan from 10.0.0.5", history=[])
-    assert set(result) == {"response", "severity"}
+    assert {"response", "severity", "transparency"} <= set(result)
     assert result["severity"] in VALID_SEVERITIES
     assert "### Recommended Actions" in result["response"]
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_handle_includes_severity():
-    """orchestrator.handle() surfaces the agent's severity to the API layer."""
+async def test_orchestrator_handle_includes_transparency():
+    """orchestrator.handle() surfaces the full transparency record."""
     with patch("agents.orchestrator._build_client", return_value=None):
         orch = Orchestrator()
     result = await orch.handle("Suspicious traffic to port 4444", [])
     assert result["agent"] == "network"
     assert result["severity"] in VALID_SEVERITIES
-    assert isinstance(result["response"], str) and result["response"]
+    transparency = result["transparency"]
+    assert transparency["severity"] == result["severity"]
+    assert 0.0 <= transparency["confidence_score"] <= 1.0
+    assert transparency["threat_id"] in (None, *VALID_THREAT_IDS)
+    assert isinstance(transparency["matched_indicators"], list)
+
+
+# ── Transparency parser ──
+
+def test_extract_transparency_parses_full_header():
+    text = (
+        "SEVERITY: High\n"
+        "CONFIDENCE: 0.83\n"
+        "THREAT_ID: T2\n"
+        "STRIDE: Spoofing\n"
+        "INDICATORS: failed logins, rotating IPs, short window\n"
+        "REASONING: Pattern matches credential stuffing.\n"
+        "ACTION: Lock account and force MFA re-enroll.\n"
+        "\n"
+        "### Summary\nA brute-force attempt was detected.\n"
+    )
+    transparency, body = extract_transparency(text, query="50 failed logins for admin")
+    assert transparency["severity"] == "High"
+    assert transparency["confidence_score"] == 0.83
+    assert transparency["threat_id"] == "T2"
+    assert transparency["stride_category"] == "Spoofing"
+    assert transparency["matched_indicators"] == [
+        "failed logins", "rotating IPs", "short window",
+    ]
+    assert "credential stuffing" in transparency["reasoning"].lower()
+    assert transparency["recommended_action"].startswith("Lock account")
+    assert body.startswith("### Summary")
+    assert "SEVERITY" not in body
+    assert "CONFIDENCE" not in body
+
+
+def test_extract_transparency_normalizes_percentage_confidence():
+    text = "SEVERITY: High\nCONFIDENCE: 91\n### Summary\n..."
+    transparency, _ = extract_transparency(text)
+    assert transparency["confidence_score"] == 0.91
+
+
+def test_extract_transparency_treats_none_threat_id_as_null():
+    text = "SEVERITY: Informational\nTHREAT_ID: NONE\n### Summary\n..."
+    transparency, _ = extract_transparency(text)
+    assert transparency["threat_id"] is None
+
+
+def test_extract_transparency_falls_back_to_keyword_classifier():
+    """When the LLM omits THREAT_ID, we backstop with the query classifier."""
+    text = "SEVERITY: High\n### Summary\nBrute force in progress.\n"
+    transparency, _ = extract_transparency(
+        text, query="50 failed login attempts for user admin"
+    )
+    assert transparency["threat_id"] == "T2"
+
+
+def test_extract_transparency_handles_no_header():
+    text = "Here is some prose without any header."
+    transparency, body = extract_transparency(text)
+    assert transparency["severity"] == DEFAULT_SEVERITY
+    assert transparency["confidence_score"] == 0.5
+    assert transparency["threat_id"] is None
+    assert body == text
+
+
+def test_extract_severity_back_compat_wrapper():
+    """The old extract_severity entry point still returns (severity, body)."""
+    severity, body = extract_severity("SEVERITY: Critical\n### Summary\nOutage.\n")
+    assert severity == "Critical"
+    assert body.startswith("### Summary")

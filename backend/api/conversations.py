@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import or_
@@ -32,10 +34,20 @@ class MessageOut(BaseModel):
     content: str
     agent_used: str | None
     severity: str | None
+    transparency: dict | None = None
     created_at: str
 
     class Config:
         from_attributes = True
+
+
+def _decode_transparency(raw: str | None) -> dict | None:
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except (ValueError, TypeError):
+        return None
 
 
 @router.get("/", response_model=list[ConversationSummary])
@@ -137,6 +149,7 @@ async def get_messages(
             content=m.content,
             agent_used=m.agent_used,
             severity=m.severity,
+            transparency=_decode_transparency(m.transparency),
             created_at=str(m.created_at),
         )
         for m in conversation.messages

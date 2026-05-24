@@ -1,3 +1,4 @@
+import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -16,16 +17,24 @@ logger = logging.getLogger("soc.chat")
 router = APIRouter()
 orchestrator = Orchestrator()
 
-GUARDRAIL_REFUSAL = (
-    "I can't help with that request. This assistant only handles defensive "
-    "security operations (network, identity, and policy). If you have a legitimate "
-    "SOC question, please rephrase it without instructions to override safety rules."
-)
+
 
 
 class ChatRequest(BaseModel):
     message: str
     conversation_id: int | None = None
+
+
+class Transparency(BaseModel):
+    """AI decision-transparency record returned with every triage response."""
+
+    severity: str
+    confidence_score: float
+    threat_id: str | None = None
+    stride_category: str | None = None
+    matched_indicators: list[str] = []
+    reasoning: str = ""
+    recommended_action: str = ""
 
 
 class ChatResponse(BaseModel):
@@ -34,6 +43,7 @@ class ChatResponse(BaseModel):
     conversation_id: int
     blocked: bool = False
     severity: str | None = None
+    transparency: Transparency | None = None
 
 
 def _load_extra_patterns(db: Session) -> list[str]:
@@ -81,10 +91,7 @@ async def chat(
     extra_patterns = _load_extra_patterns(db)
     input_check = GuardrailChecker.check_input(body.message, extra_patterns=extra_patterns)
     if not input_check["safe"]:
-        logger.warning(
-            "GUARDRAIL_BLOCK user_id=%s reason=%r message_preview=%r",
-            user.id, input_check["reason"], body.message[:120],
-        )
+        # Log the block for the admin
         AuthService.log_security_event(
             db,
             event_type="guardrail_block",
@@ -92,18 +99,38 @@ async def chat(
             email=user.email,
             user_id=user.id,
             ip_address=_ip(request),
-            details=f"reason={input_check['reason']} matched={input_check.get('matched_pattern','')}",
+            details=f"reason={input_check["reason"]} matched={input_check.get("matched_pattern","")}",
         )
+        
+        # Apply strike
+        updated_user, locked = AuthService.register_guardrail_strike(db, user)
+        
+        if locked:
+            AuthService.log_security_event(
+                db, event_type="account_locked", status="blocked",
+                email=user.email, user_id=user.id, ip_address=_ip(request),
+                details="Locked due to 3 guardrail violations."
+            )
+            refusal_msg = "🚨 **ACCOUNT LOCKED** 🚨\nYou have repeatedly attempted to bypass security guardrails. Your account has been temporarily disabled."
+        else:
+            remaining = 3 - updated_user.guardrail_strikes
+            s = "s" if remaining > 1 else ""
+            refusal_msg = f"I cannot help with that request. This assistant only handles defensive security operations.\n\n⚠️ **WARNING**: This incident has been logged. You will be automatically blocked from the system if you attempt to violate security policies **{remaining} more time{s}**."
+
         db.add(Message(conversation_id=conversation.id, role="user", content=body.message))
         db.add(Message(
             conversation_id=conversation.id,
             role="assistant",
-            content=GUARDRAIL_REFUSAL,
+            content=refusal_msg,
             agent_used="guardrail",
         ))
         db.commit()
+        
+        if locked:
+            raise HTTPException(status_code=423, detail="Account locked due to multiple security violations.")
+            
         return ChatResponse(
-            response=GUARDRAIL_REFUSAL,
+            response=refusal_msg,
             agent="guardrail",
             conversation_id=conversation.id,
             blocked=True,
@@ -119,7 +146,9 @@ async def chat(
     # Route to agent
     result = await orchestrator.handle(body.message, history)
 
-    # Audit the routing decision
+    # Audit the routing decision - record agent, severity, threat-id, and
+    # confidence so the audit log itself supports the transparency story.
+    transparency = result.get("transparency", {})
     AuthService.log_security_event(
         db,
         event_type="routing_decision",
@@ -129,6 +158,9 @@ async def chat(
         ip_address=_ip(request),
         details=(
             f"agent={result['agent']} severity={result['severity']} "
+            f"threat_id={transparency.get('threat_id') or 'NONE'} "
+            f"confidence={transparency.get('confidence_score', 0.0):.2f} "
+            f"stride={transparency.get('stride_category') or 'NONE'} "
             f"conversation_id={conversation.id}"
         ),
     )
@@ -161,6 +193,7 @@ async def chat(
         content=result["response"],
         agent_used=result["agent"],
         severity=result["severity"],
+        transparency=json.dumps(transparency) if transparency else None,
     ))
     AuthService.log_security_event(
         db,
@@ -178,4 +211,5 @@ async def chat(
         agent=result["agent"],
         conversation_id=conversation.id,
         severity=result["severity"],
+        transparency=Transparency(**transparency) if transparency else None,
     )

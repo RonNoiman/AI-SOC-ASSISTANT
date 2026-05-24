@@ -33,3 +33,20 @@ class IdentityAgent(BaseAgent):
         "account compromise is confirmed."
     )
     demo_severity = "High"
+    demo_threat_id = "T2"  # Credential Stuffing / Brute Force is the canonical demo case.
+    demo_stride = "Spoofing"
+    demo_confidence = 0.78
+    demo_indicators = [
+        "Multiple failed logins on the same account",
+        "Authentication attempts from rotating source IPs",
+        "Short time window between attempts",
+    ]
+    demo_reasoning = (
+        "Pattern matches credential-stuffing / brute-force behaviour against a "
+        "single identity; severity is High because successful takeover would "
+        "expose the analyst's data, but compromise is not yet confirmed."
+    )
+    demo_recommended_action = (
+        "Lock or temporarily disable the targeted account and require MFA "
+        "re-enrollment before re-enabling."
+    )

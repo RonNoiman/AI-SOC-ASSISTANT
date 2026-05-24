@@ -119,6 +119,29 @@ export default function Admin() {
     }
   };
 
+    const handleAcknowledgeAll = async () => {
+    if (!confirm("Dismiss all active alerts?")) return;
+    try {
+      await admin.acknowledgeAllEvents();
+      await loadAll();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAcknowledge = async (id: number) => {
+    try {
+      await admin.acknowledgeEvent(id);
+      await loadAll();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const unacknowledgedAlerts = events.filter(
+    (e) => e.event_type === "guardrail_block" && !e.acknowledged,
+  );
+
   const handleDeletePolicy = async (id: number) => {
     if (!confirm("Delete this policy?")) return;
     try {
@@ -152,7 +175,25 @@ export default function Admin() {
         </div>
       )}
 
+      
+      {unacknowledgedAlerts.length > 0 && (
+        <div style={{ backgroundColor: "#fee2e2", border: "1px solid #ef4444", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem", color: "#991b1b" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+            <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: 0, color: "#b91c1c" }}>
+              <span style={{ fontSize: "1.2rem" }}>🚨</span> Active Security Alerts ({unacknowledgedAlerts.length})
+            </h3>
+            <button 
+              onClick={handleAcknowledgeAll}
+              style={{ padding: "0.4rem 0.8rem", background: "#b91c1c", color: "white", border: "none", borderRadius: "6px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}
+            >
+              Dismiss All
+            </button>
+          </div>
+          <p style={{ margin: 0, fontSize: "0.9rem" }}>Users have attempted restricted actions or triggered guardrails. Please review the Audit Log to dismiss them.</p>
+        </div>
+      )}
       <div className="stat-cards">
+
         <div className="stat-card">
           <div className="stat-value">{stats?.total_users}</div>
           <div className="stat-label">Total Users</div>
@@ -335,7 +376,26 @@ export default function Admin() {
                   </td>
                   <td>{e.email || "-"}</td>
                   <td>{e.ip_address || "-"}</td>
-                  <td className="audit-details">{e.details || "-"}</td>
+                  <td className="audit-details">
+                    <div>{e.details || "-"}</div>
+                    {e.event_type === "guardrail_block" && !e.acknowledged && (
+                      <button
+                        onClick={() => handleAcknowledge(e.id)}
+                        style={{
+                          marginTop: "0.5rem",
+                          padding: "0.2rem 0.5rem",
+                          background: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Dismiss Alert
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -359,7 +419,26 @@ export default function Admin() {
                 <tr key={e.id}>
                   <td>{new Date(e.created_at).toLocaleString()}</td>
                   <td>{e.email || "-"}</td>
-                  <td className="audit-details">{e.details || "-"}</td>
+                  <td className="audit-details">
+                    <div>{e.details || "-"}</div>
+                    {e.event_type === "guardrail_block" && !e.acknowledged && (
+                      <button
+                        onClick={() => handleAcknowledge(e.id)}
+                        style={{
+                          marginTop: "0.5rem",
+                          padding: "0.2rem 0.5rem",
+                          background: "#ef4444",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Dismiss Alert
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

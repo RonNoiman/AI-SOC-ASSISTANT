@@ -12,6 +12,7 @@ from auth.router import router as auth_router
 from api.chat import router as chat_router
 from api.conversations import router as conversations_router
 from api.admin import router as admin_router
+from api.reference import router as reference_router
 from database.connection import engine, SessionLocal, ensure_runtime_schema
 from database.models import Base, User
 from auth.service import AuthService
@@ -84,6 +85,7 @@ app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 app.include_router(chat_router, prefix="/api/chat", tags=["Chat"])
 app.include_router(conversations_router, prefix="/api/conversations", tags=["Conversations"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
+app.include_router(reference_router, prefix="/api/reference", tags=["Reference"])
 
 
 @app.get("/health")

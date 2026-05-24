@@ -9,6 +9,11 @@ import {
   type Message,
 } from "../api/client";
 import SeverityBadge from "../components/SeverityBadge";
+import TransparencyPanel from "../components/TransparencyPanel";
+import MarkdownLink from "../components/MarkdownLink";
+import { autoLinkMitre } from "../components/mitreAutoLink";
+
+const MD_COMPONENTS = { a: MarkdownLink } as const;
 
 const AGENT_LABELS: Record<string, string> = {
   network: "Network",
@@ -217,13 +222,19 @@ export default function History() {
                     </div>
                     <div className="msg-content">
                       {m.role === "assistant" ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.content}
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={MD_COMPONENTS}
+                        >
+                          {autoLinkMitre(m.content)}
                         </ReactMarkdown>
                       ) : (
                         m.content
                       )}
                     </div>
+                    {m.role === "assistant" && m.transparency && (
+                      <TransparencyPanel transparency={m.transparency} />
+                    )}
                   </div>
                 ))}
               </div>

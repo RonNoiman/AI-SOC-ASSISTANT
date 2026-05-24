@@ -63,6 +63,7 @@ class AuthService:
     @staticmethod
     def reset_login_attempts(db: Session, user: User) -> User:
         user.failed_login_attempts = 0
+        user.guardrail_strikes = 0
         user.locked_until = None
         db.add(user)
         db.commit()
@@ -74,6 +75,18 @@ class AuthService:
         user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
         locked = False
         if user.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS:
+            user.locked_until = datetime.utcnow() + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
+            locked = True
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user, locked
+
+    @staticmethod
+    def register_guardrail_strike(db: Session, user: User) -> tuple[User, bool]:
+        user.guardrail_strikes = (user.guardrail_strikes or 0) + 1
+        locked = False
+        if user.guardrail_strikes >= 3:
             user.locked_until = datetime.utcnow() + timedelta(minutes=LOGIN_LOCKOUT_MINUTES)
             locked = True
         db.add(user)
@@ -123,6 +136,7 @@ class AuthService:
     def update_password(db: Session, user: User, password: str) -> User:
         user.hashed_password = AuthService.hash_password(password)
         user.failed_login_attempts = 0
+        user.guardrail_strikes = 0
         user.locked_until = None
         db.add(user)
         db.commit()

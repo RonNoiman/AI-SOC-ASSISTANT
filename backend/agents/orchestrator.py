@@ -94,9 +94,17 @@ class Orchestrator:
         agent = self.agents[agent_name]
         logger.info("ROUTE category=%s query_preview=%r", agent_name, query[:80])
         result = await agent.run(query, conversation_history or [])
-        logger.info("TRIAGE agent=%s severity=%s", agent_name, result["severity"])
+        transparency = result.get("transparency", {})
+        logger.info(
+            "TRIAGE agent=%s severity=%s threat_id=%s confidence=%.2f",
+            agent_name,
+            result["severity"],
+            transparency.get("threat_id"),
+            transparency.get("confidence_score", 0.0),
+        )
         return {
             "agent": agent_name,
             "response": result["response"],
             "severity": result["severity"],
+            "transparency": transparency,
         }

@@ -18,7 +18,11 @@ class GuardrailChecker:
         r"(?i)(give|show|teach|tell)\s+(me\s+)?(the\s+)?(steps|how)\s+to\s+(attack|hack|exploit|breach|bypass)",
         r"(?i)attack\s+steps",
         r"(?i)how\s+to\s+(hack|exploit|bypass|crack|brute[-\s]?force)",
-        r"(?i)write\s+(malware|ransomware|a\s+virus|an?\s+exploit)",
+        # "Write me X", "write a quick X", "write some X" all reach for offensive code.
+        # Allow up to 3 intervening words between `write` and the dangerous noun so
+        # we catch the realistic phrasings (`write me a virus`, `write us ransomware`)
+        # without an exhaustive list of every variant.
+        r"(?i)write\s+(?:\w+\s+){0,3}(malware|ransomware|virus|exploit|trojan|backdoor)\b",
     ]
 
     OFF_TOPIC_KEYWORDS = [

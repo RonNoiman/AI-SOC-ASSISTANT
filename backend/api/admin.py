@@ -42,6 +42,7 @@ class SecurityEventOut(BaseModel):
     ip_address: str | None
     details: str | None
     created_at: str
+    acknowledged: bool = False
 
 
 class GuardrailPolicyOut(BaseModel):
@@ -50,6 +51,7 @@ class GuardrailPolicyOut(BaseModel):
     reason: str
     is_active: bool
     created_at: str
+    acknowledged: bool = False
 
 
 class GuardrailPolicyCreate(BaseModel):
@@ -228,6 +230,7 @@ async def list_security_events(
             ip_address=event.ip_address,
             details=event.details,
             created_at=str(event.created_at),
+            acknowledged=bool(event.acknowledged),
         )
         for event in events
     ]
@@ -313,3 +316,34 @@ async def delete_policy(
         details=f"policy_id={policy_id} pattern={pattern}",
     )
     return {"detail": "Policy deleted."}
+
+
+@router.post("/security-events/acknowledge-all")
+async def acknowledge_all_events(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    unacknowledged = db.query(SecurityEvent).filter(
+        SecurityEvent.event_type == "guardrail_block",
+        SecurityEvent.acknowledged == False
+    ).all()
+    
+    count = len(unacknowledged)
+    for event in unacknowledged:
+        event.acknowledged = True
+        
+    db.commit()
+    return {"detail": f"{count} alerts acknowledged."}
+
+@router.post("/security-events/{event_id}/acknowledge")
+async def acknowledge_event(
+    event_id: int,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    event = db.query(SecurityEvent).filter(SecurityEvent.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    event.acknowledged = True
+    db.commit()
+    return {"detail": "Alert acknowledged."}

@@ -21,7 +21,7 @@ sequenceDiagram
     participant Frontend
     participant Backend as FastAPI Backend
     participant Auth as Auth Service
-    participant DB as PostgreSQL
+    participant DB as SQLite
 
     User->>Frontend: Enter login credentials
     Frontend->>Backend: POST /auth/login
@@ -45,7 +45,7 @@ sequenceDiagram
     participant Frontend
     participant Backend as FastAPI Backend
     participant Auth as Auth Service
-    participant DB as PostgreSQL
+    participant DB as SQLite
 
     User->>Frontend: Fill registration form
     Frontend->>Backend: POST /auth/register

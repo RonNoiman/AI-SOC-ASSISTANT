@@ -47,6 +47,9 @@ export default function Layout() {
           <NavLink to="/history" className={linkClass}>
             <span className="nav-icon">&#8986;</span> History
           </NavLink>
+          <NavLink to="/knowledge" className={linkClass}>
+            <span className="nav-icon">&#9776;</span> Knowledge Base
+          </NavLink>
           {user?.role === "admin" && (
             <NavLink to="/admin" className={linkClass}>
               <span className="nav-icon">&#9881;</span> Admin
