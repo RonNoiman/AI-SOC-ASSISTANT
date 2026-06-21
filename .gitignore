@@ -1,31 +1,40 @@
-# --- Secrets / env -----------------------------------------------------------
-.env
-.env.local
-.env.*.local
-*.pem
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
-# --- Python ------------------------------------------------------------------
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-venv/
-*.egg-info/
-.pytest_cache/
+# Node
+node_modules
+dist
+dist-ssr
+*.local
 
-# --- Local databases ---------------------------------------------------------
-*.db
-*.sqlite
-*.sqlite3
-
-# --- Node / frontend ---------------------------------------------------------
-node_modules/
-dist/
-build/
-
-# --- IDEs / OS ---------------------------------------------------------------
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-.idea/
-.vscode/
-Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Custom Scripts and Temp Files
+run_all.sh
+run_backend.sh
+run_frontend.sh
+patch_backend.py
+*.pid
+viasat-diagramme-696x571.jpg

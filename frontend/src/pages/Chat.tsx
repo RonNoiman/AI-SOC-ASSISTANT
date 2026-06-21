@@ -7,9 +7,19 @@ import type { Transparency } from "../api/client";
 import SeverityBadge from "../components/SeverityBadge";
 import TransparencyPanel from "../components/TransparencyPanel";
 import MarkdownLink from "../components/MarkdownLink";
+import Mermaid from "../components/Mermaid";
 import { autoLinkMitre } from "../components/mitreAutoLink";
 
-const MD_COMPONENTS = { a: MarkdownLink } as const;
+const MD_COMPONENTS = { 
+  a: MarkdownLink,
+  code({ node, inline, className, children, ...props }: any) {
+    const match = /language-(\w+)/.exec(className || "");
+    if (!inline && match && match[1] === "mermaid") {
+      return <Mermaid chart={String(children).replace(/\n$/, "")} />;
+    }
+    return <code className={className} {...props}>{children}</code>;
+  }
+} as any;
 
 
 interface ChatMessage {

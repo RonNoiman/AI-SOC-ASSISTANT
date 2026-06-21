@@ -4,6 +4,7 @@ import os
 from agents.network_agent import NetworkAgent
 from agents.identity_agent import IdentityAgent
 from agents.policy_agent import PolicyAgent
+from risk.evidence_correlator import EvidenceCorrelator
 
 logger = logging.getLogger("soc.orchestrator")
 
@@ -49,7 +50,9 @@ class Orchestrator:
 
     def __init__(self):
         self.client = _build_client()
+        self.correlator = EvidenceCorrelator(kb_dir="../knowledge_base")
         self.agents = {
+
             "network": NetworkAgent(self.client),
             "identity": IdentityAgent(self.client),
             "policy": PolicyAgent(self.client),
@@ -102,9 +105,70 @@ class Orchestrator:
             transparency.get("threat_id"),
             transparency.get("confidence_score", 0.0),
         )
+        # --- RISK REASONING ENGINE OVERRIDE ---
+        try:
+            analysis = self.correlator.correlate_and_analyze(query)
+            risk = analysis["risk"]
+            phase = analysis["phase"]
+            techniques = analysis["techniques"]
+            context = analysis["context"]
+            
+            # Create Mermaid Graph
+            phases = ["Recon", "Initial Access", "DMZ/VPN Exploit", "Lateral Movement", "Target Selection", "Command Execution", "Modem Management Exploit", "Wiper Deployment", "Impact"]
+            phase_num = phase["phase_number"] if phase else 0
+            phase_title = phase["phase_title"] if phase else "Unknown"
+            
+            graph = "```mermaid\ngraph LR\n"
+            for i, phase_name in enumerate(phases):
+                node_id = f"P{i+1}"
+                style = ":::highlight" if (i + 1) == phase_num else ""
+                graph += f"    {node_id}[\"{i+1}. {phase_name}\"]{style}\n"
+                if i > 0:
+                    graph += f"    P{i} --> P{i+1}\n"
+            graph += "\n    classDef highlight fill:#f96,stroke:#333,stroke-width:4px;\n```"
+
+            mitre_table = "### MITRE ATT&CK Mapping\n"
+            mitre_table += "| Phase | Technique ID | Technique Name | Evidence | Confidence |\n"
+            mitre_table += "|-------|--------------|----------------|----------|------------|\n"
+            for t in techniques:
+                mitre_table += f"| {t.get('attack_phase','')} | {t['technique_id']} | {t['technique_name']} | Matched input | {t.get('confidence_notes', 'N/A')} |\n"
+            if not techniques:
+                 mitre_table += "| N/A | N/A | No techniques mapped | N/A | N/A |\n"
+                 
+            risk_table = "### Risk Calculation\n"
+            risk_table += "| Factor | Score | Reason | Evidence |\n"
+            risk_table += "|--------|-------|--------|----------|\n"
+            risk_table += f"| Likelihood | {risk['likelihood']}/5 | {', '.join(risk['likelihood_reasons'])} | {query} |\n"
+            risk_table += f"| Impact | {risk['impact']}/5 | {', '.join(risk['impact_reasons'])} | Context inferred |\n"
+            risk_table += f"| **Final Risk** | **{risk['risk_score']}/25** | **Likelihood x Impact** | **Severity: {risk['severity']}** |\n"
+
+            # Strip old conflicting MITRE mapping from the LLM response
+            import re
+            enhanced_response = result["response"]
+            enhanced_response = re.sub(r'### MITRE ATT&CK Mapping.*?###', '###', enhanced_response, flags=re.DOTALL)
+            
+            enhanced_response += f"\n\n### Attack Vector Context\n**Current Suspected Phase:** {phase_num} - {phase_title}\n\n{graph}\n\n{mitre_table}\n\n{risk_table}\n"
+            
+            if context.missing_info:
+                 enhanced_response += "\n### Missing Context Information\n"
+                 for m in context.missing_info:
+                     enhanced_response += f"- {m}\n"
+            
+            final_severity = risk["severity"]
+            transparency["severity"] = final_severity
+            transparency["threat_id"] = "Deterministic Risk Engine"
+            transparency["stride_category"] = "Multiple Contexts" 
+            
+        except Exception as e:
+            logger.error(f"Risk engine failed: {e}")
+            enhanced_response = result["response"]
+            final_severity = result["severity"]
+        # --------------------------------------
+
         return {
             "agent": agent_name,
-            "response": result["response"],
-            "severity": result["severity"],
+            "response": enhanced_response,
+            "severity": final_severity,
             "transparency": transparency,
         }
+

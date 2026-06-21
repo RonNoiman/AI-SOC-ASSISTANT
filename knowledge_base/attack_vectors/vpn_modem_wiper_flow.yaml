@@ -1,0 +1,110 @@
+name: "VPN to Modem Wiper Attack Flow"
+description: "A 9-phase attack vector targeting external remote services to move laterally, escalate privileges, and ultimately deploy wiper malware via a supply chain mechanism."
+phases:
+  - phase_number: 1
+    phase_title: "IP address and credentials reconnaissance"
+    business_meaning: "Attacker gathers target external IPs and valid credentials."
+    mitre_techniques: ["T1595.002", "T1593", "T1589.001", "T1650", "T1586"]
+    required_evidence: ["Scanner traffic", "Failed login attempts", "Credential stuffing"]
+    likely_log_sources: ["Firewall logs", "WAF logs", "Authentication logs"]
+    affected_assets: ["External facing infrastructure"]
+    likelihood_factors: ["High volume of recon traffic"]
+    impact_factors: ["Information disclosure"]
+    possible_analyst_questions: ["Is this a targeted scan?", "Were any accounts compromised?"]
+    recommended_response: ["Block scanning IPs", "Review authentication logs for success"]
+
+  - phase_number: 2
+    phase_title: "Use internet to access IPs of Gateway Centers"
+    business_meaning: "Attacker targets public-facing gateways."
+    mitre_techniques: ["T1190", "T1133"]
+    required_evidence: ["Exploit payloads", "VPN logins"]
+    likely_log_sources: ["VPN logs", "WAF logs"]
+    affected_assets: ["VPN Appliances", "Gateways"]
+    likelihood_factors: ["Exploit attempts", "Unusual VPN access"]
+    impact_factors: ["Gateway exposure"]
+    possible_analyst_questions: ["Was the exploit successful?", "Who logged into the VPN?"]
+    recommended_response: ["Patch public-facing apps", "Enforce MFA"]
+
+  - phase_number: 3
+    phase_title: "Exploit VPN vulnerability to pass through DMZ"
+    business_meaning: "Attacker breaches the perimeter into the DMZ."
+    mitre_techniques: ["T1078", "T1068", "T1562.004"]
+    required_evidence: ["Successful exploit logs", "Valid account usage", "Firewall rules modified"]
+    likely_log_sources: ["VPN logs", "Endpoint security logs", "Firewall configs"]
+    affected_assets: ["DMZ Servers"]
+    likelihood_factors: ["Firewall disabled", "Privilege escalation detected"]
+    impact_factors: ["Internal network access", "Loss of segmentation"]
+    possible_analyst_questions: ["Did they bypass the firewall?", "What account was used?"]
+    recommended_response: ["Isolate DMZ hosts", "Restore firewall rules", "Revoke compromised accounts"]
+
+  - phase_number: 4
+    phase_title: "Move laterally"
+    business_meaning: "Attacker expands access within the internal network."
+    mitre_techniques: ["T1049", "T1082", "T1021", "T1570"]
+    required_evidence: ["Internal scanning", "Remote execution", "Tool transfer"]
+    likely_log_sources: ["Network flows", "Endpoint logs"]
+    affected_assets: ["Internal Servers", "Workstations"]
+    likelihood_factors: ["Lateral movement tools detected"]
+    impact_factors: ["Widespread network compromise"]
+    possible_analyst_questions: ["Where did they move?", "What tools were transferred?"]
+    recommended_response: ["Hunt for lateral movement", "Isolate affected subnets"]
+
+  - phase_number: 5
+    phase_title: "Select specific beam spots"
+    business_meaning: "Attacker discovers specific target configurations (e.g., satellite modems)."
+    mitre_techniques: ["T1016", "T1082"]
+    required_evidence: ["Configuration discovery commands"]
+    likely_log_sources: ["Command line logs"]
+    affected_assets: ["Management Servers"]
+    likelihood_factors: ["Targeted discovery commands"]
+    impact_factors: ["Target selection"]
+    possible_analyst_questions: ["What configurations were accessed?"]
+    recommended_response: ["Monitor access to configuration files"]
+
+  - phase_number: 6
+    phase_title: "Send signal to the modems"
+    business_meaning: "Attacker executes commands on target infrastructure."
+    mitre_techniques: ["T1059"]
+    required_evidence: ["Script execution", "Command history"]
+    likely_log_sources: ["Endpoint logs", "Sysmon"]
+    affected_assets: ["Modems", "Management Interfaces"]
+    likelihood_factors: ["Unusual scripting activity"]
+    impact_factors: ["Execution of malicious payload"]
+    possible_analyst_questions: ["What scripts were run?"]
+    recommended_response: ["Block malicious scripts", "Review command history"]
+
+  - phase_number: 7
+    phase_title: "Exploit VPN vulnerability to access modem management"
+    business_meaning: "Attacker exploits secondary VPNs or management interfaces."
+    mitre_techniques: ["T1562.004", "T1133", "T1068"]
+    required_evidence: ["Management VPN logs", "Exploit attempts on management interfaces"]
+    likely_log_sources: ["Management VPN logs", "Device logs"]
+    affected_assets: ["Modem Management Interfaces"]
+    likelihood_factors: ["Exploitation of management interfaces"]
+    impact_factors: ["Full control of modems"]
+    possible_analyst_questions: ["Did they get management access?"]
+    recommended_response: ["Isolate management network", "Patch management interfaces"]
+
+  - phase_number: 8
+    phase_title: "Upload wiper malware"
+    business_meaning: "Attacker deploys destructive payload, possibly via a supply chain update mechanism."
+    mitre_techniques: ["T1588.002", "T1072", "T1542.001", "T1195", "T1070.004"]
+    required_evidence: ["Malware download", "Deployment via trusted tools", "Firmware modification"]
+    likely_log_sources: ["Endpoint AV", "Software deployment logs", "Firmware integrity checks"]
+    affected_assets: ["Modems", "Customer Premise Equipment"]
+    likelihood_factors: ["Wiper signature", "Abuse of deployment tools"]
+    impact_factors: ["Preparation for destruction"]
+    possible_analyst_questions: ["How was the wiper deployed?", "Is it a supply chain issue?"]
+    recommended_response: ["Halt deployment tools", "Quarantine malware", "Analyze firmware"]
+
+  - phase_number: 9
+    phase_title: "Impact"
+    business_meaning: "Attacker executes destructive actions, wiping data and firmware."
+    mitre_techniques: ["T1529", "T1485", "T1495", "T1561", "T1561.001", "T1561.002", "T1531", "T1498", "T1489"]
+    required_evidence: ["Mass deletions", "System crashes", "Service stops"]
+    likely_log_sources: ["Endpoint logs", "System logs", "Availability monitoring"]
+    affected_assets: ["All compromised devices"]
+    likelihood_factors: ["Destructive commands executed"]
+    impact_factors: ["Total loss of availability", "Device bricking"]
+    possible_analyst_questions: ["What is the extent of the damage?", "Can devices be recovered?"]
+    recommended_response: ["Initiate incident response plan", "Begin recovery from backups", "Replace bricked hardware"]

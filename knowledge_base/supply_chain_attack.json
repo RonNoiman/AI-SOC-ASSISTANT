@@ -1,0 +1,21 @@
+{
+  "concept": "Supply Chain Attack",
+  "description": "An attack that targets the software or hardware supply chain to compromise the end users.",
+  "types": [
+    "Software update compromise",
+    "Third-party library compromise",
+    "Vendor infrastructure compromise"
+  ],
+  "why_it_matters_to_soc": "Supply chain attacks bypass perimeter defenses by using trusted channels. The blast radius is often massive, and the initial access may look like legitimate traffic.",
+  "mitre_mapping": "T1195",
+  "risk_impact_factors": [
+    "Implicit trust associated with vendor updates",
+    "Widespread deployment of the compromised software",
+    "High privileges often required by the software"
+  ],
+  "defensive_actions": [
+    "Monitor network traffic from update servers",
+    "Verify signatures of downloaded binaries",
+    "Implement zero-trust architecture for third-party software"
+  ]
+}
