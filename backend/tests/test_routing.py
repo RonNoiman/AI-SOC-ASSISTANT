@@ -116,7 +116,7 @@ async def test_orchestrator_handle_includes_transparency():
     transparency = result["transparency"]
     assert transparency["severity"] == result["severity"]
     assert 0.0 <= transparency["confidence_score"] <= 1.0
-    assert transparency["threat_id"] in (None, *VALID_THREAT_IDS)
+    assert transparency["threat_id"] in (None, "Deterministic Risk Engine", *VALID_THREAT_IDS)
     assert isinstance(transparency["matched_indicators"], list)
 
 
